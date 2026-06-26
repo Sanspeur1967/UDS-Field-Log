@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#172033" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="UDS Log" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>UDS Field Log</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>UDS Field Log</h1>
+    <p>Offline mobile daily logbook</p>
+  </header>
+
+  <nav>
+    <button onclick="showTab('entry')" class="active">Entry</button>
+    <button onclick="showTab('logs')">Logs</button>
+    <button onclick="showTab('actions')">Actions</button>
+    <button onclick="showTab('report')">Report</button>
+  </nav>
+
+  <main>
+    <section id="entry" class="tab active">
+      <h2>New Field Entry</h2>
+
+      <label>Date<input id="date" type="date"></label>
+      <label>Time<input id="time" type="time"></label>
+
+      <label>Shift
+        <select id="shift">
+          <option>DS</option>
+          <option>NS</option>
+        </select>
+      </label>
+
+      <label>Area / Heading
+        <input id="area" list="areas" placeholder="EXL XD44 Zone 41">
+        <datalist id="areas">
+          <option>EXL XD42 DS30</option>
+          <option>EXL XD42 DN30</option>
+          <option>EXL XD44 Zone 31</option>
+          <option>EXL XD44 Zone 41</option>
+          <option>EXL XD46 DN31</option>
+          <option>EXL XD58 DN34</option>
+          <option>EXL XD58 DS34</option>
+        </datalist>
+      </label>
+
+      <label>Work Type
+        <select id="workType">
+          <option>Survey</option>
+          <option>Steel Set Installation</option>
+          <option>Scratch Back</option>
+          <option>Mesh Installation</option>
+          <option>Rebar</option>
+          <option>Concrete Pour</option>
+          <option>Fill Walls</option>
+          <option>Fill Arch</option>
+          <option>Shotcrete</option>
+          <option>Grouting</option>
+          <option>Ventilation Works</option>
+          <option>Housekeeping</option>
+          <option>Other</option>
+        </select>
+      </label>
+
+      <label>Job Being Performed
+        <textarea id="job" placeholder="Example: aligning steel set, bolt together and torque"></textarea>
+      </label>
+
+      <label>Next Shift
+        <textarea id="nextShift" placeholder="Example: survey and install mesh"></textarea>
+      </label>
+
+      <div class="checks">
+        <label><input type="checkbox" id="ptha"> PTHA</label>
+        <label><input type="checkbox" id="lif"> LIF</label>
+        <label><input type="checkbox" id="housekeeping"> Housekeeping</label>
+        <label><input type="checkbox" id="barricades"> Barricades</label>
+        <label><input type="checkbox" id="ground"> Ground Checked</label>
+      </div>
+
+      <label>Notes
+        <textarea id="notes" placeholder="Safety, delays, good work, concerns, required follow-up..."></textarea>
+      </label>
+
+      <label>Photos
+        <input id="photos" type="file" accept="image/*" capture="environment" multiple>
+      </label>
+      <div id="photoPreview" class="photos"></div>
+
+      <button onclick="saveEntry()">Save Entry Offline</button>
+    </section>
+
+    <section id="logs" class="tab">
+      <h2>Saved Logs</h2>
+      <input id="search" placeholder="Search logs..." oninput="renderLogs()">
+      <div id="logList"></div>
+    </section>
+
+    <section id="actions" class="tab">
+      <h2>Action Register</h2>
+
+      <label>Action Required<input id="actionText" placeholder="Repair / remove / install / follow up..."></label>
+      <label>Owner<input id="owner" placeholder="Maintenance / UDS / Civil / E&I"></label>
+      <label>Priority
+        <select id="priority">
+          <option>High</option>
+          <option>Medium</option>
+          <option>Low</option>
+        </select>
+      </label>
+      <label>Due Date<input id="dueDate" type="date"></label>
+      <label>Status
+        <select id="status">
+          <option>Open</option>
+          <option>In Progress</option>
+          <option>Closed</option>
+        </select>
+      </label>
+
+      <button onclick="saveAction()">Save Action</button>
+      <button class="secondary" onclick="exportActions()">Export Actions CSV</button>
+      <div id="actionList"></div>
+    </section>
+
+    <section id="report" class="tab">
+      <h2>Daily Report</h2>
+      <label>Report Date<input id="reportDate" type="date"></label>
+      <button onclick="generateReport()">Generate Report</button>
+      <button class="secondary" onclick="window.print()">Save as PDF / Print</button>
+      <button class="secondary" onclick="exportBackup()">Backup Data</button>
+      <div id="reportOutput"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
