@@ -4,7 +4,7 @@
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#eef2f6",
-  "theme_color": "#172033",
-  "description": "Offline UDS development mining logbook.",
+  "theme_color": "#101827",
+  "description": "UDS development log v2.",
   "icons": []
 }
