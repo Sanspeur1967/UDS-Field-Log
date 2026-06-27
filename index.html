@@ -6,15 +6,15 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro v6 Enterprise</title>
+<title>UDS Development Pro v7 Photo Editor</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=6.0">
+<link rel="stylesheet" href="style.css?v=7.0">
 </head>
 <body>
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">v6 Enterprise • mining operations platform</p>
+    <p id="syncStatus">v7 Enterprise • photo editor + checkbox fix</p>
   </div>
   <button class="header-sync" onclick="syncAll()">Sync</button>
 </header>
@@ -109,7 +109,7 @@
     <label>Good Catch / Improvement<textarea id="goodCatch"></textarea></label>
     <label>General Notes<textarea id="notes"></textarea></label>
 
-    <h3>Photos + Markup</h3>
+    <h3>Photos + Editor</h3>
     <p class="hint">Take photos, tap a thumbnail to view full screen, or use Markup to draw circles/arrows/text.</p>
     <div class="photo-actions">
       <button type="button" onclick="takePhoto()">Take Photo</button>
@@ -213,19 +213,22 @@
   </div>
 </div>
 
-<div id="markupModal" class="modal">
+<div id="markupModal" class="modal editor-modal">
   <button class="modal-close" onclick="closeMarkup()">×</button>
-  <canvas id="markupCanvas"></canvas>
+  <div class="editor-wrap"><canvas id="markupCanvas"></canvas></div>
   <div class="markup-tools">
+    <button onclick="setMarkupTool('move')">Move</button>
     <button onclick="setMarkupTool('circle')">Circle</button>
-    <button onclick="setMarkupTool('arrow')">Arrow</button>
     <button onclick="setMarkupTool('rect')">Box</button>
+    <button onclick="setMarkupTool('arrow')">Arrow</button>
     <button onclick="setMarkupTool('text')">Text</button>
-    <button onclick="saveMarkup()" class="success">Save Markup</button>
+    <button onclick="deleteSelectedMarkup()" class="danger">Delete</button>
+    <button onclick="saveMarkup()" class="success">Save</button>
   </div>
+  <p class="markup-help">Tap to add. Tap/drag an item to move it before saving.</p>
 </div>
 
-<script src="config.js?v=6.0"></script>
-<script src="app.js?v=6.0"></script>
+<script src="config.js?v=7.0"></script>
+<script src="app.js?v=7.0"></script>
 </body>
 </html>

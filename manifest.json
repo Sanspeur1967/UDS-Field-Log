@@ -1,10 +1,10 @@
 {
   "name": "UDS Development Pro Enterprise",
   "short_name": "UDS Pro",
-  "start_url": "./index.html?v=6.0",
+  "start_url": "./index.html?v=7.0",
   "display": "standalone",
   "background_color": "#edf2f7",
   "theme_color": "#0b1220",
-  "description": "UDS Development Pro v6 Enterprise.",
+  "description": "UDS Development Pro v7 Photo Editor with checkbox fix.",
   "icons": []
 }

@@ -2,7 +2,7 @@ let entries=JSON.parse(localStorage.getItem("uds_pro_entries")||localStorage.get
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=6.0")};
+window.onload=()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=7.0")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="gallery")renderGallery();if(id==="map")renderMineMap();window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
@@ -18,10 +18,85 @@ function openPendingPhoto(i){modalPhotos=pendingPhotos.map(p=>p.data);modalIndex
 function showModalPhoto(){modalImage.src=modalPhotos[modalIndex]||"";photoModal.classList.add("active")} function closePhotoModal(){photoModal.classList.remove("active")} function prevModalPhoto(){if(!modalPhotos.length)return;modalIndex=(modalIndex-1+modalPhotos.length)%modalPhotos.length;showModalPhoto()} function nextModalPhoto(){if(!modalPhotos.length)return;modalIndex=(modalIndex+1)%modalPhotos.length;showModalPhoto()}
 function downloadModalPhoto(){let a=document.createElement("a");a.href=modalImage.src;a.download="UDS_photo.jpg";a.click()} async function shareModalPhoto(){try{let blob=dataUrlToBlob(modalImage.src),file=new File([blob],"UDS_photo.jpg",{type:blob.type});if(navigator.share&&navigator.canShare({files:[file]}))await navigator.share({files:[file],title:"UDS Photo"});else alert("Share not available. Use Download.")}catch(e){alert("Share not available.")}}
 
-function openMarkup(i){markupIndex=i;markupImage=new Image();markupImage.onload=()=>{let c=markupCanvas,ctx=c.getContext("2d"),max=900,scale=Math.min(max/markupImage.width,max/markupImage.height,1);c.width=markupImage.width*scale;c.height=markupImage.height*scale;ctx.drawImage(markupImage,0,0,c.width,c.height);markupModal.classList.add("active")};markupImage.src=pendingPhotos[i].data}
-function closeMarkup(){markupModal.classList.remove("active")} function setMarkupTool(t){markupTool=t}
-markupCanvas.addEventListener("click",e=>{let r=markupCanvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,ctx=markupCanvas.getContext("2d");ctx.strokeStyle="red";ctx.fillStyle="red";ctx.lineWidth=5;if(markupTool==="circle"){ctx.beginPath();ctx.arc(x,y,38,0,Math.PI*2);ctx.stroke()}else if(markupTool==="rect"){ctx.strokeRect(x-45,y-30,90,60)}else if(markupTool==="arrow"){ctx.beginPath();ctx.moveTo(x-60,y+20);ctx.lineTo(x,y);ctx.stroke();ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-20,y-25);ctx.lineTo(x-28,y+8);ctx.fill()}else{let text=prompt("Text for photo:","Issue");if(text){ctx.font="28px Arial";ctx.fillText(text,x,y)}}});
-function saveMarkup(){if(markupIndex!==null){pendingPhotos[markupIndex].data=markupCanvas.toDataURL("image/jpeg",0.9);renderPendingPhotos();closeMarkup()}}
+
+let editorItems=[], selectedItem=null, editorTool="move", editorImage=null, editorPhotoIndex=null, editorDragging=false, editorDragOffset={x:0,y:0};
+
+function openMarkup(i){
+  editorPhotoIndex=i; editorItems=[]; selectedItem=null; editorTool="move";
+  editorImage=new Image();
+  editorImage.onload=()=>{
+    const c=markupCanvas, maxW=Math.min(window.innerWidth-24,1000), maxH=Math.min(window.innerHeight*0.68,900);
+    const scale=Math.min(maxW/editorImage.width,maxH/editorImage.height,1);
+    c.width=Math.round(editorImage.width*scale); c.height=Math.round(editorImage.height*scale);
+    markupModal.classList.add("active"); drawEditor();
+  };
+  editorImage.src=pendingPhotos[i].data;
+}
+function closeMarkup(){markupModal.classList.remove("active")}
+function setMarkupTool(tool){editorTool=tool}
+function getCanvasPoint(event){
+  const r=markupCanvas.getBoundingClientRect(), t=event.touches&&event.touches[0]?event.touches[0]:event;
+  return {x:(t.clientX-r.left)*(markupCanvas.width/r.width), y:(t.clientY-r.top)*(markupCanvas.height/r.height)};
+}
+function drawEditor(){
+  const c=markupCanvas, ctx=c.getContext("2d"); ctx.clearRect(0,0,c.width,c.height);
+  if(editorImage)ctx.drawImage(editorImage,0,0,c.width,c.height);
+  for(const item of editorItems){
+    const sel=item===selectedItem; ctx.lineWidth=sel?7:5; ctx.strokeStyle=sel?"#00ff66":"red"; ctx.fillStyle=sel?"#00ff66":"red";
+    if(item.type==="circle"){ctx.beginPath();ctx.arc(item.x,item.y,item.r,0,Math.PI*2);ctx.stroke(); if(sel)handle(ctx,item.x,item.y)}
+    if(item.type==="rect"){ctx.strokeRect(item.x,item.y,item.w,item.h); if(sel)handle(ctx,item.x,item.y)}
+    if(item.type==="arrow"){drawArrow(ctx,item.x1,item.y1,item.x2,item.y2); if(sel)handle(ctx,item.x2,item.y2)}
+    if(item.type==="text"){ctx.font="bold 30px Arial";ctx.lineWidth=5;ctx.strokeStyle="white";ctx.strokeText(item.text,item.x,item.y);ctx.fillStyle=sel?"#00ff66":"red";ctx.fillText(item.text,item.x,item.y); if(sel)handle(ctx,item.x,item.y)}
+  }
+}
+function handle(ctx,x,y){ctx.fillStyle="#00ff66";ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.fill()}
+function drawArrow(ctx,x1,y1,x2,y2){
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1),h=26;
+  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-h*Math.cos(a-Math.PI/6),y2-h*Math.sin(a-Math.PI/6));ctx.lineTo(x2-h*Math.cos(a+Math.PI/6),y2-h*Math.sin(a+Math.PI/6));ctx.closePath();ctx.fill();
+}
+function addEditorItem(x,y){
+  if(editorTool==="circle")editorItems.push({type:"circle",x,y,r:45});
+  else if(editorTool==="rect")editorItems.push({type:"rect",x:x-55,y:y-35,w:110,h:70});
+  else if(editorTool==="arrow")editorItems.push({type:"arrow",x1:x-75,y1:y+45,x2:x,y2:y});
+  else if(editorTool==="text"){const text=prompt("Text:","Issue"); if(text)editorItems.push({type:"text",x,y,text})}
+  selectedItem=editorItems[editorItems.length-1]||null;
+}
+function hitTestEditor(x,y){
+  for(let i=editorItems.length-1;i>=0;i--){
+    const it=editorItems[i];
+    if(it.type==="circle" && Math.hypot(x-it.x,y-it.y)<=it.r+22)return it;
+    if(it.type==="rect" && x>=it.x-12&&x<=it.x+it.w+12&&y>=it.y-12&&y<=it.y+it.h+12)return it;
+    if(it.type==="arrow"){
+      const minX=Math.min(it.x1,it.x2)-35,maxX=Math.max(it.x1,it.x2)+35,minY=Math.min(it.y1,it.y2)-35,maxY=Math.max(it.y1,it.y2)+35;
+      if(x>=minX&&x<=maxX&&y>=minY&&y<=maxY)return it;
+    }
+    if(it.type==="text" && x>=it.x-15&&x<=it.x+(it.text.length*18+30)&&y>=it.y-40&&y<=it.y+18)return it;
+  }
+  return null;
+}
+function startEditorPointer(event){
+  event.preventDefault(); const p=getCanvasPoint(event), hit=hitTestEditor(p.x,p.y);
+  if(hit){selectedItem=hit; editorDragging=true; editorDragOffset=hit.type==="arrow"?{x:p.x-hit.x2,y:p.y-hit.y2}:{x:p.x-hit.x,y:p.y-hit.y};}
+  else{selectedItem=null; if(editorTool!=="move")addEditorItem(p.x,p.y);}
+  drawEditor();
+}
+function moveEditorPointer(event){
+  if(!editorDragging||!selectedItem)return; event.preventDefault(); const p=getCanvasPoint(event), it=selectedItem;
+  if(it.type==="circle"||it.type==="rect"||it.type==="text"){it.x=p.x-editorDragOffset.x; it.y=p.y-editorDragOffset.y;}
+  if(it.type==="arrow"){const ox=it.x2,oy=it.y2; it.x2=p.x-editorDragOffset.x; it.y2=p.y-editorDragOffset.y; const dx=it.x2-ox,dy=it.y2-oy; it.x1+=dx; it.y1+=dy;}
+  drawEditor();
+}
+function endEditorPointer(){editorDragging=false}
+markupCanvas.addEventListener("mousedown",startEditorPointer);
+markupCanvas.addEventListener("mousemove",moveEditorPointer);
+markupCanvas.addEventListener("mouseup",endEditorPointer);
+markupCanvas.addEventListener("mouseleave",endEditorPointer);
+markupCanvas.addEventListener("touchstart",startEditorPointer,{passive:false});
+markupCanvas.addEventListener("touchmove",moveEditorPointer,{passive:false});
+markupCanvas.addEventListener("touchend",endEditorPointer,{passive:false});
+function deleteSelectedMarkup(){if(!selectedItem)return; editorItems=editorItems.filter(item=>item!==selectedItem); selectedItem=null; drawEditor()}
+function saveMarkup(){selectedItem=null; drawEditor(); if(editorPhotoIndex!==null){pendingPhotos[editorPhotoIndex].data=markupCanvas.toDataURL("image/jpeg",0.92); renderPendingPhotos();} closeMarkup()}
 
 function startVoiceEntry(){let SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert("Voice dictation is not supported in this browser.");return}let r=new SR();r.lang="en-US";r.onresult=e=>{let text=e.results[0][0].transcript;notes.value=(notes.value?notes.value+" ":"")+text;parseVoiceEntry(text)};r.start()}
 function parseVoiceEntry(text){let t=text.toLowerCase();let h=text.match(/(xd\\d+\\s*[a-z]{0,2}\\d+|exl\\s*xd\\d+\\s*[a-z]{0,2}\\d+)/i);if(h)heading.value=h[0].toUpperCase();let bolts=t.match(/(\\d+|eighteen|twelve|ten|twenty|thirty|forty) bolts?/);if(bolts)boltsInstalled.value=wordNum(bolts[1]);if(t.includes("mesh"))meshInstalled.value=text.match(/(\\d+|four|three|two|five) mesh/i)?.[0]||"Mesh noted";if(t.includes("shotcrete"))activity.value="Shotcrete";else if(t.includes("bolt"))activity.value="Bolting";else if(t.includes("muck"))activity.value="Mucking";if(t.includes("spraymec"))equipment.value=(equipment.value?equipment.value+"; ":"")+"Spraymec";if(t.includes("waiting")||t.includes("delay")){delayType.value="Waiting on Equipment";delays.value=(delays.value?delays.value+" ":"")+text}job.value=(job.value?job.value+" ":"")+text}
