@@ -1,4 +1,4 @@
-// UDS Development Log v2 config
+// UDS Development Log v2.1 config
 // Paste your Supabase publishable/anon key below.
 // Do NOT paste the service_role or secret key.
 
