@@ -1,10 +1,10 @@
 {
   "name": "UDS Development Pro AI",
   "short_name": "UDS Pro",
-  "start_url": "./index.html?v=4.3",
+  "start_url": "./index.html?v=5.0",
   "display": "standalone",
   "background_color": "#eef2f6",
   "theme_color": "#0f172a",
-  "description": "UDS Development Pro AI v4.3 multi-photo capture.",
+  "description": "UDS Development Pro v5 with true multi-photo workflow.",
   "icons": []
 }
