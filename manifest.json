@@ -1,10 +1,10 @@
 {
-  "name": "UDS Development Pro AI",
+  "name": "UDS Development Pro Enterprise",
   "short_name": "UDS Pro",
-  "start_url": "./index.html?v=5.0",
+  "start_url": "./index.html?v=6.0",
   "display": "standalone",
-  "background_color": "#eef2f6",
-  "theme_color": "#0f172a",
-  "description": "UDS Development Pro v5 with true multi-photo workflow.",
+  "background_color": "#edf2f7",
+  "theme_color": "#0b1220",
+  "description": "UDS Development Pro v6 Enterprise.",
   "icons": []
 }

@@ -1,21 +1,231 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"><meta name="theme-color" content="#0f172a"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="UDS Pro"><title>UDS Development Pro v5</title><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="style.css?v=5.0"></head><body>
-<header><h1>UDS Development Pro</h1><p id="syncStatus">v5 Pro AI • multi-photo workflow</p></header>
-<nav><button data-tab="dashboard" class="active">Home</button><button data-tab="entry">Entry</button><button data-tab="actions">Actions</button><button data-tab="ai">AI</button><button data-tab="report">Report</button><button data-tab="settings">Settings</button></nav>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="UDS Pro">
+<title>UDS Development Pro v6 Enterprise</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css?v=6.0">
+</head>
+<body>
+<header class="app-header">
+  <div>
+    <h1>UDS Development Pro</h1>
+    <p id="syncStatus">v6 Enterprise • mining operations platform</p>
+  </div>
+  <button class="header-sync" onclick="syncAll()">Sync</button>
+</header>
+
+<nav class="top-nav">
+  <button data-tab="dashboard" class="active">Home</button>
+  <button data-tab="entry">Entry</button>
+  <button data-tab="gallery">Gallery</button>
+  <button data-tab="map">Map</button>
+  <button data-tab="ai">AI</button>
+  <button data-tab="more">More</button>
+</nav>
+
 <main>
-<section id="dashboard" class="tab active"><h2>Shift Dashboard</h2><div class="tiles"><div><b id="tileHeadings">0</b><span>Headings</span></div><div><b id="tileMetres">0.0</b><span>Metres</span></div><div><b id="tileBolts">0</b><span>Bolts</span></div><div><b id="tileShotcrete">0.0</b><span>Shotcrete m³</span></div><div><b id="tileDelay">0.0</b><span>Delay Hrs</span></div><div><b id="tileActions">0</b><span>Open Actions</span></div></div><h2>Quick Actions</h2><div class="quick"><button data-go="entry">+ Field Entry</button><button data-go="ai" class="ai">AI Assistant</button><button data-go="actions" class="secondary">+ Action</button><button onclick="syncAll()" class="success">Sync</button></div><h2>Recent Entries</h2><div id="recentLogs"></div></section>
-<section id="entry" class="tab"><h2>Development Entry</h2>
-<label>Date<input id="date" type="date"></label><label>Time<input id="time" type="time"></label><label>Shift<select id="shift"><option>DS</option><option>NS</option></select></label><label>Heading / Drive<input id="heading" placeholder="EXL XD44 DN31"></label><label>Level / Area<input id="levelArea"></label>
-<div class="grid"><label>Crew<input id="crew"></label><label>Supervisor<input id="supervisor"></label><label>Foreman<input id="foreman"></label><label>Personnel<input id="personnel" type="number"></label></div>
-<label>Activity<select id="activity"><option>Bolting</option><option>Screening / Mesh</option><option>Shotcrete</option><option>Scaling</option><option>Face Drilling</option><option>Charging</option><option>Blasting</option><option>Mucking</option><option>Services Install</option><option>Vent Install</option><option>Cable Bolting</option><option>Rehab</option><option>Roadway Cleanup</option><option>Ground Support QA/QC</option><option>Survey</option><option>Other</option></select></label>
-<label>Round / Chainage<input id="roundChainage"></label><div class="grid"><label>Metres Advanced<input id="metresAdvanced" type="number" step="0.1"></label><label>Bolts Installed<input id="boltsInstalled" type="number"></label><label>Cable Bolts<input id="cableBolts" type="number"></label><label>Mesh Installed<input id="meshInstalled"></label><label>Shotcrete m³<input id="shotcreteM3" type="number" step="0.1"></label><label>Shotcrete Thickness<input id="shotcreteThickness"></label></div>
-<label>Equipment Used<textarea id="equipment"></textarea></label><label>Ground Condition<select id="groundCondition"><option>Good</option><option>Fair</option><option>Poor</option><option>Wet</option><option>Loose / Scaling Required</option><option>Overbreak</option><option>Other</option></select></label><label>Delay Type<select id="delayType"><option>None</option><option>Waiting on Equipment</option><option>Equipment Breakdown</option><option>Waiting on Services</option><option>Waiting on Survey</option><option>Waiting on Ventilation</option><option>Ground Conditions</option><option>Material Shortage</option><option>Access Restriction</option><option>Other</option></select></label><label>Delay Hours<input id="delayHours" type="number" step="0.25"></label>
-<label>Job Being Performed<textarea id="job"></textarea></label><label>Delays / Constraints<textarea id="delays"></textarea></label><label>Next Shift Plan<textarea id="nextShift"></textarea></label>
-<h3>Safety / Quality</h3><div class="checks"><label><input type="checkbox" id="ptha"> PTHA</label><label><input type="checkbox" id="lif"> LIF</label><label><input type="checkbox" id="scaled"> Scaling Complete</label><label><input type="checkbox" id="groundSupport"> Ground Support Complete</label><label><input type="checkbox" id="boltPattern"> Bolt Pattern Verified</label><label><input type="checkbox" id="shotcreteQuality"> Shotcrete Quality Checked</label><label><input type="checkbox" id="ventilation"> Ventilation Adequate</label><label><input type="checkbox" id="servicesClear"> Services Clear</label><label><input type="checkbox" id="barricades"> Barricades / Controls</label><label><input type="checkbox" id="reentry"> Re-entry Confirmed</label></div>
-<label>Safety Observation<textarea id="safetyObservation"></textarea></label><label>Good Catch / Improvement<textarea id="goodCatch"></textarea></label><label>General Notes<textarea id="notes"></textarea></label>
-<h3>Photos</h3><p class="hint">Tap Take Photo, then Add Another Photo for each extra picture before saving.</p><div class="photo-actions"><button onclick="takePhoto()" type="button">Take Photo</button><button onclick="takePhoto()" type="button" class="secondary">Add Another Photo</button><button onclick="choosePhotos()" type="button" class="secondary">Choose From Library</button><button onclick="clearPendingPhotos()" type="button" class="danger">Clear Photos</button></div><input id="cameraPhoto" type="file" accept="image/*" capture="environment" style="display:none"><input id="libraryPhotos" type="file" accept="image/*" multiple style="display:none"><p id="photoCount" class="photo-count">No photos added yet.</p><div id="photoPreview" class="photos"></div>
-<button onclick="saveEntry()" type="button">Save Entry</button></section>
-<section id="actions" class="tab"><h2>Action Register</h2><label>Related Heading<input id="actionHeading"></label><label>Action Required<input id="actionText"></label><label>Owner<input id="owner"></label><label>Priority<select id="priority"><option>High</option><option>Medium</option><option>Low</option></select></label><label>Due Date<input id="dueDate" type="date"></label><label>Status<select id="status"><option>Open</option><option>In Progress</option><option>Closed</option></select></label><button onclick="saveAction()">Save Action</button><button class="secondary" onclick="exportActions()">Export CSV</button><div id="actionList"></div></section>
-<section id="ai" class="tab"><h2>AI Superintendent Assistant</h2><p class="hint">Use saved entries to generate reports, handovers, actions, and cleaned notes.</p><label>AI Date<input id="aiDate" type="date"></label><div class="quick"><button class="ai" onclick="aiDailyReport()">Daily Report</button><button class="ai" onclick="aiShiftHandover()">Shift Handover</button><button class="ai" onclick="aiActionFinder()">Action Finder</button><button class="ai" onclick="aiSafetySummary()">Safety Summary</button></div><label>Raw Voice / Field Note<textarea id="rawNote"></textarea></label><button class="ai" onclick="aiCleanNote()">Clean Note / Extract Fields</button><h3>AI Output</h3><div id="aiOutput" class="ai-output"></div></section>
-<section id="report" class="tab"><h2>Daily Report</h2><label>Report Date<input id="reportDate" type="date"></label><button onclick="generateReport()">Generate Basic Report</button><button class="ai" onclick="aiDailyReport()">Generate AI Report</button><button class="secondary" onclick="window.print()">Save as PDF / Print</button><button class="secondary" onclick="exportBackup()">Backup JSON</button><div id="reportOutput"></div></section>
-<section id="settings" class="tab"><h2>Settings</h2><div class="notice"><b>Supabase:</b><p id="supabaseStatus"></p></div><div class="notice"><b>AI:</b><p id="aiStatus">Not tested yet.</p></div><button onclick="syncAll()" class="success">Sync Now</button><button onclick="testAI()" class="ai">Test AI</button><button onclick="loadCloudCount()" class="secondary">Check Cloud</button><button onclick="clearLocalData()" class="danger">Clear Local Data</button></section>
-</main><script src="config.js?v=5.0"></script><script src="app.js?v=5.0"></script></body></html>
+<section id="dashboard" class="tab active">
+  <div class="section-title"><h2>Supervisor Dashboard</h2><p>Production, delays, safety and actions</p></div>
+  <div class="tiles">
+    <div class="tile"><b id="tileHeadings">0</b><span>Headings</span></div>
+    <div class="tile"><b id="tileMetres">0.0</b><span>Metres</span></div>
+    <div class="tile"><b id="tileBolts">0</b><span>Bolts</span></div>
+    <div class="tile"><b id="tileShotcrete">0.0</b><span>Shotcrete m³</span></div>
+    <div class="tile"><b id="tileDelay">0.0</b><span>Delay Hrs</span></div>
+    <div class="tile"><b id="tileActions">0</b><span>Open Actions</span></div>
+  </div>
+  <div class="quick">
+    <button data-go="entry">+ New Entry</button>
+    <button data-go="gallery" class="secondary">Gallery</button>
+    <button data-go="ai" class="ai">AI Summary</button>
+    <button onclick="generateReport()" class="secondary">Report</button>
+  </div>
+  <h3>Live Production by Heading</h3>
+  <div id="headingDashboard"></div>
+  <h3>Recent Entries</h3>
+  <div id="recentLogs"></div>
+</section>
+
+<section id="entry" class="tab">
+  <div class="section-title"><h2>Development Entry</h2><p>Fast field entry with photos and voice</p></div>
+  <div class="form-card">
+    <button type="button" class="voice-btn" onclick="startVoiceEntry()">🎤 Voice Entry</button>
+    <p class="hint">Try: “XD44 DN31 installed eighteen bolts, four mesh sheets, waiting on Spraymec.”</p>
+
+    <label>Date<input id="date" type="date"></label>
+    <label>Time<input id="time" type="time"></label>
+    <label>Shift<select id="shift"><option>DS</option><option>NS</option></select></label>
+    <label>Heading / Drive<input id="heading" placeholder="EXL XD44 DN31"></label>
+    <label>Level / Area<input id="levelArea" placeholder="Extraction Level / Panel 2"></label>
+
+    <div class="grid">
+      <label>Crew / Trade<input id="crew" placeholder="Crew / Trade"></label>
+      <label>Supervisor<input id="supervisor" placeholder="Name"></label>
+      <label>Foreman<input id="foreman" placeholder="Name"></label>
+      <label>Personnel<input id="personnel" type="number" placeholder="0"></label>
+    </div>
+
+    <label>Activity<select id="activity">
+      <option>Bolting</option><option>Screening / Mesh</option><option>Shotcrete</option><option>Scaling</option>
+      <option>Face Drilling</option><option>Charging</option><option>Blasting</option><option>Mucking</option>
+      <option>Services Install</option><option>Vent Install</option><option>Cable Bolting</option><option>Rehab</option>
+      <option>Roadway Cleanup</option><option>Ground Support QA/QC</option><option>Survey</option><option>Other</option>
+    </select></label>
+
+    <label>Round / Chainage<input id="roundChainage" placeholder="Round 24 / CH 156.5"></label>
+    <div class="grid">
+      <label>Metres Advanced<input id="metresAdvanced" type="number" step="0.1"></label>
+      <label>Bolts Installed<input id="boltsInstalled" type="number"></label>
+      <label>Cable Bolts<input id="cableBolts" type="number"></label>
+      <label>Mesh Installed<input id="meshInstalled" placeholder="4 sheets / complete"></label>
+      <label>Shotcrete m³<input id="shotcreteM3" type="number" step="0.1"></label>
+      <label>Shotcrete Thickness<input id="shotcreteThickness" placeholder="75mm"></label>
+    </div>
+
+    <label>Equipment Used<textarea id="equipment" placeholder="Bolter, Spraymec, Jumbo, Loader, Truck..."></textarea></label>
+    <label>Ground Condition<select id="groundCondition"><option>Good</option><option>Fair</option><option>Poor</option><option>Wet</option><option>Loose / Scaling Required</option><option>Overbreak</option><option>Other</option></select></label>
+    <label>Delay Type<select id="delayType"><option>None</option><option>Waiting on Equipment</option><option>Equipment Breakdown</option><option>Waiting on Services</option><option>Waiting on Survey</option><option>Waiting on Ventilation</option><option>Ground Conditions</option><option>Material Shortage</option><option>Access Restriction</option><option>Other</option></select></label>
+    <label>Delay Hours<input id="delayHours" type="number" step="0.25"></label>
+
+    <label>Job Being Performed<textarea id="job"></textarea></label>
+    <label>Delays / Constraints<textarea id="delays"></textarea></label>
+    <label>Next Shift Plan<textarea id="nextShift"></textarea></label>
+
+    <h3>Safety / Quality</h3>
+    <div class="checks">
+      <label><input type="checkbox" id="ptha"> PTHA</label><label><input type="checkbox" id="lif"> LIF</label>
+      <label><input type="checkbox" id="scaled"> Scaling Complete</label><label><input type="checkbox" id="groundSupport"> Ground Support Complete</label>
+      <label><input type="checkbox" id="boltPattern"> Bolt Pattern Verified</label><label><input type="checkbox" id="shotcreteQuality"> Shotcrete Quality Checked</label>
+      <label><input type="checkbox" id="ventilation"> Ventilation Adequate</label><label><input type="checkbox" id="servicesClear"> Services Clear</label>
+      <label><input type="checkbox" id="barricades"> Barricades / Controls</label><label><input type="checkbox" id="reentry"> Re-entry Confirmed</label>
+    </div>
+
+    <label>Safety Observation<textarea id="safetyObservation"></textarea></label>
+    <label>Good Catch / Improvement<textarea id="goodCatch"></textarea></label>
+    <label>General Notes<textarea id="notes"></textarea></label>
+
+    <h3>Photos + Markup</h3>
+    <p class="hint">Take photos, tap a thumbnail to view full screen, or use Markup to draw circles/arrows/text.</p>
+    <div class="photo-actions">
+      <button type="button" onclick="takePhoto()">Take Photo</button>
+      <button type="button" onclick="takePhoto()" class="secondary">Add Another</button>
+      <button type="button" onclick="choosePhotos()" class="secondary">Library</button>
+      <button type="button" onclick="clearPendingPhotos()" class="danger">Clear</button>
+    </div>
+    <input id="cameraPhoto" type="file" accept="image/*" capture="environment" style="display:none">
+    <input id="libraryPhotos" type="file" accept="image/*" multiple style="display:none">
+    <p id="photoCount" class="photo-count">No photos added yet.</p>
+    <div id="photoPreview" class="photos"></div>
+
+    <button type="button" class="save-btn" onclick="saveEntry()">Save Entry</button>
+  </div>
+</section>
+
+<section id="gallery" class="tab">
+  <div class="section-title"><h2>Gallery View</h2><p>Tap any photo for full screen view</p></div>
+  <div id="galleryGrid" class="gallery-grid"></div>
+</section>
+
+<section id="map" class="tab">
+  <div class="section-title"><h2>Interactive Mine Map</h2><p>Tap a heading to open history</p></div>
+  <div id="mineMap" class="mine-map"></div>
+  <div id="headingHistory"></div>
+</section>
+
+<section id="ai" class="tab">
+  <div class="section-title"><h2>AI Superintendent</h2><p>Reports, trends and voice questions</p></div>
+  <div class="form-card">
+    <label>AI Date<input id="aiDate" type="date"></label>
+    <div class="quick">
+      <button type="button" class="ai" onclick="aiDailyReport()">AI Daily Summary</button>
+      <button type="button" class="ai" onclick="aiShiftHandover()">Shift Handover</button>
+      <button type="button" class="ai" onclick="aiTrendAnalysis()">Trend Analysis</button>
+      <button type="button" class="ai" onclick="aiSupervisorDashboard()">Supervisor Brief</button>
+    </div>
+    <label>Ask AI<textarea id="rawNote" placeholder="Show headings with more than 3 hours delay."></textarea></label>
+    <button type="button" class="voice-btn" onclick="startVoiceQuestion()">🎤 Ask by Voice</button>
+    <button type="button" class="ai" onclick="aiAskQuestion()">Ask AI</button>
+    <h3>AI Output</h3>
+    <div id="aiOutput" class="ai-output"></div>
+  </div>
+</section>
+
+<section id="more" class="tab">
+  <div class="section-title"><h2>More</h2><p>Actions, reports and settings</p></div>
+  <div class="quick">
+    <button data-go="actions">Actions</button>
+    <button data-go="report" class="secondary">Reports</button>
+    <button data-go="settings" class="secondary">Settings</button>
+  </div>
+</section>
+
+<section id="actions" class="tab hidden-tab">
+  <div class="section-title"><h2>Action Register</h2><p>Track follow-ups until closed</p></div>
+  <div class="form-card">
+    <label>Related Heading<input id="actionHeading"></label>
+    <label>Action Required<input id="actionText"></label>
+    <label>Owner<input id="owner" placeholder="UDS / Maintenance / Survey / E&I"></label>
+    <label>Priority<select id="priority"><option>High</option><option>Medium</option><option>Low</option></select></label>
+    <label>Due Date<input id="dueDate" type="date"></label>
+    <label>Status<select id="status"><option>Open</option><option>In Progress</option><option>Closed</option></select></label>
+    <button type="button" onclick="saveAction()">Save Action</button>
+    <button type="button" class="secondary" onclick="exportActions()">Export CSV</button>
+  </div>
+  <div id="actionList"></div>
+</section>
+
+<section id="report" class="tab hidden-tab">
+  <div class="section-title"><h2>Daily Report</h2><p>Generate and print your shift report</p></div>
+  <div class="form-card">
+    <label>Report Date<input id="reportDate" type="date"></label>
+    <button type="button" onclick="generateReport()">Generate Basic Report</button>
+    <button type="button" class="ai" onclick="aiDailyReport()">Generate AI Report</button>
+    <button type="button" class="secondary" onclick="window.print()">Save as PDF / Print</button>
+    <button type="button" class="secondary" onclick="exportBackup()">Backup JSON</button>
+  </div>
+  <div id="reportOutput"></div>
+</section>
+
+<section id="settings" class="tab hidden-tab">
+  <div class="section-title"><h2>Settings</h2><p>Connection and maintenance</p></div>
+  <div class="notice"><b>Supabase</b><p id="supabaseStatus"></p></div>
+  <div class="notice"><b>AI</b><p id="aiStatus">Not tested yet.</p></div>
+  <button type="button" onclick="syncAll()" class="success">Sync Now</button>
+  <button type="button" onclick="testAI()" class="ai">Test AI</button>
+  <button type="button" onclick="loadCloudCount()" class="secondary">Check Cloud</button>
+  <button type="button" onclick="clearLocalData()" class="danger">Clear Local Data</button>
+</section>
+</main>
+
+<div id="photoModal" class="modal">
+  <button class="modal-close" onclick="closePhotoModal()">×</button>
+  <button class="modal-nav left" onclick="prevModalPhoto()">‹</button>
+  <img id="modalImage" src="" alt="Full photo">
+  <button class="modal-nav right" onclick="nextModalPhoto()">›</button>
+  <div class="modal-actions">
+    <button onclick="downloadModalPhoto()">Download</button>
+    <button onclick="shareModalPhoto()">Share</button>
+  </div>
+</div>
+
+<div id="markupModal" class="modal">
+  <button class="modal-close" onclick="closeMarkup()">×</button>
+  <canvas id="markupCanvas"></canvas>
+  <div class="markup-tools">
+    <button onclick="setMarkupTool('circle')">Circle</button>
+    <button onclick="setMarkupTool('arrow')">Arrow</button>
+    <button onclick="setMarkupTool('rect')">Box</button>
+    <button onclick="setMarkupTool('text')">Text</button>
+    <button onclick="saveMarkup()" class="success">Save Markup</button>
+  </div>
+</div>
+
+<script src="config.js?v=6.0"></script>
+<script src="app.js?v=6.0"></script>
+</body>
+</html>
