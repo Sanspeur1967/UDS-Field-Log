@@ -535,3 +535,34 @@ button.secondary{background:#475569}button.success{background:#16a34a}button.dan
 .form-filter-badge{display:inline-block;background:#dbeafe;color:#1e40af;border-radius:999px;padding:4px 10px;font-weight:900;font-size:12px;margin-bottom:8px}
 @media(min-width:760px){.scope-grid{grid-template-columns:repeat(4,1fr)}.form-grid,.form-check-grid{grid-template-columns:1fr 1fr}}
 @media print{header,.top-nav,.quick,button,#savedFormsList,.section-title{display:none!important}body{background:white}.form-template{box-shadow:none;border-radius:0}.form-section{page-break-inside:avoid}}
+
+/* Enterprise 3.1 PJO Print + View Fix */
+.form-doc-card .doc-actions{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:10px;
+}
+.form-doc-card .doc-actions button{
+  width:100%;
+  margin:0;
+  padding:10px;
+}
+.pjo-print-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:11px;
+}
+.pjo-print-table th,.pjo-print-table td{
+  border:1px solid #222;
+  padding:4px;
+  vertical-align:top;
+}
+.pjo-print-title{
+  text-align:center;
+  font-weight:900;
+  color:#7f1d1d;
+}
+@media print{
+  body{background:white!important}
+}

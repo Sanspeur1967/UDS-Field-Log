@@ -181,7 +181,7 @@ let savedForms=JSON.parse(localStorage.getItem("uds_enterprise_forms")||"[]");
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=3.0")};
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=3.1")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="forms"){renderSelectedForm();renderSavedForms();}if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
@@ -358,7 +358,7 @@ async function saveEntry(){if(!canWrite()){alert("Viewer role is read-only.");re
 function saveAction(){if(!canWrite()){alert("Viewer role is read-only.");return;}let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 3.0",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 3.1",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
@@ -1073,3 +1073,237 @@ function exportBackup(){download("UDS_Development_Log_Backup.json",JSON.stringif
 function clearEntry(){["heading","levelArea","crew","supervisor","foreman","personnel","roundChainage","metresAdvanced","boltsInstalled","cableBolts","meshInstalled","shotcreteM3","shotcreteThickness","equipment","delayHours","job","delays","nextShift","safetyObservation","goodCatch","notes"].forEach(id=>document.getElementById(id).value="");["ptha","lif","scaled","groundSupport","boltPattern","shotcreteQuality","ventilation","servicesClear","barricades","reentry"].forEach(id=>document.getElementById(id).checked=false);clearPendingPhotos()}function clearAction(){["actionHeading","actionText","owner","dueDate"].forEach(id=>document.getElementById(id).value="")}
 function closePhotoModal(){photoModal.classList.remove("active")}function showModalPhoto(){modalImage.src=modalPhotos[modalIndex]||"";photoModal.classList.add("active")}function prevModalPhoto(){if(!modalPhotos.length)return;modalIndex=(modalIndex-1+modalPhotos.length)%modalPhotos.length;showModalPhoto()}function nextModalPhoto(){if(!modalPhotos.length)return;modalIndex=(modalIndex+1)%modalPhotos.length;showModalPhoto()}function downloadModalPhoto(){download("UDS_photo.jpg",dataUrlToBlob(modalImage.src),"image/jpeg")}async function shareModalPhoto(){try{let blob=dataUrlToBlob(modalImage.src),file=new File([blob],"UDS_photo.jpg",{type:blob.type});if(navigator.share&&navigator.canShare({files:[file]}))await navigator.share({files:[file],title:"UDS Photo"});else alert("Share not available. Use Download.")}catch(e){alert("Share not available.")}}
 function download(n,c,t){let b=c instanceof Blob?c:new Blob([c],{type:t}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=n;a.click();URL.revokeObjectURL(u)}function groupBy(arr,key){return arr.reduce((o,e)=>{let k=e[key]||"Not recorded";(o[k]=o[k]||[]).push(e);return o},{})}function val(id){return document.getElementById(id).value}function chk(id){return document.getElementById(id).checked}function num(id){return Number(document.getElementById(id).value||0)}function sum(arr,key){return arr.reduce((s,e)=>s+(Number(e[key])||0),0)}function esc(x){return String(x||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}function escAttr(x){return String(x||"").replace(/'/g,"&#39;").replace(/"/g,"&quot;")}
+
+
+/* Enterprise 3.1 overrides */
+
+function fillCurrentFormFromData(data){
+  if(!data) return;
+  Object.entries(data).forEach(([key,value])=>{
+    const byId = document.getElementById(key);
+    if(byId){
+      if(byId.type === "checkbox") byId.checked = !!value;
+      else byId.value = value ?? "";
+      return;
+    }
+    const radios = document.querySelectorAll(`input[name="${CSS.escape(key)}"]`);
+    radios.forEach(r => { if(r.value === value) r.checked = true; });
+  });
+}
+
+function editSavedForm(id){
+  const f = savedForms.find(x => x.id === id);
+  if(!f) return alert("Form not found.");
+  showTab("forms");
+  if(document.getElementById("formType")) document.getElementById("formType").value = f.type || "pjo";
+  renderSelectedForm();
+  setTimeout(()=>fillCurrentFormFromData(f.data), 50);
+}
+
+function viewSavedForm(id){
+  const f = savedForms.find(x => x.id === id);
+  if(!f) return alert("Form not found.");
+  printSingleSavedForm(id, false);
+}
+
+function duplicateSavedForm(id){
+  const f = savedForms.find(x => x.id === id);
+  if(!f) return alert("Form not found.");
+  const copy = JSON.parse(JSON.stringify(f));
+  copy.id = "form_" + Date.now();
+  copy.created_at = new Date().toISOString();
+  copy.title = (copy.title || "Form") + " - Copy";
+  copy.created_by = currentUser?.email || copy.created_by || "";
+  savedForms.unshift(copy);
+  saveFormsLocal();
+  renderSavedForms();
+}
+
+function deleteSavedForm(id){
+  const f = savedForms.find(x => x.id === id);
+  if(!f) return;
+  if(!confirm("Delete this saved form from this device?")) return;
+  savedForms = savedForms.filter(x => x.id !== id);
+  saveFormsLocal();
+  renderSavedForms();
+}
+
+function getVal(data, key){
+  const v = data?.[key];
+  if(v === true) return "☑";
+  if(v === false) return "☐";
+  return v || "";
+}
+function ynVal(data, key){
+  const v = data?.[key];
+  return {
+    yes: v === "Yes" ? "☑" : "☐",
+    no: v === "No" ? "☑" : "☐"
+  };
+}
+
+function buildPJOPrintHTML(f){
+  const d = f.data || {};
+  const q = (num, text, key, yesno=true) => {
+    const yn = ynVal(d, "pjo_"+key);
+    return `<tr>
+      <td style="width:68%">${num}. ${text}<br><b>Comments:</b> ${esc(d["pjo_"+key+"_comment"] || "")}</td>
+      <td style="width:16%;text-align:center">${yesno ? yn.yes+" Yes / Тийм" : ""}</td>
+      <td style="width:16%;text-align:center">${yesno ? yn.no+" No / Үгүй" : ""}</td>
+    </tr>`;
+  };
+
+  return `
+  <div class="pjo-print-page">
+    <table class="pjo-print-table">
+      <tr>
+        <td style="width:28%;font-size:22px;font-weight:900;color:#1e3a8a"><span style="color:#991b1b">D</span>AYAN</td>
+        <td colspan="3" class="pjo-print-title">АЖЛЫН ТӨЛӨВЛӨГӨӨТ АЖИГЛАЛТ<br>PLANNED JOB OBSERVATION</td>
+      </tr>
+      <tr>
+        <td><b>Workplace:</b><br>${esc(d.pjo_workplace)}</td>
+        <td><b>Date of observation:</b><br>${esc(d.pjo_date)}</td>
+        <td><b>Job/task observed:</b><br>${esc(d.pjo_task)}</td>
+        <td><b>Procedure name and #:</b><br>${esc(d.pjo_procedure)}</td>
+      </tr>
+      <tr>
+        <td colspan="4"><b>Reason for observation:</b>
+          ${getVal(d,"pjo_reason_procedure")} Job Procedure / Practice Update &nbsp;
+          ${getVal(d,"pjo_reason_injury")} Recent Injury &nbsp;
+          ${getVal(d,"pjo_reason_training")} Training Follow-up &nbsp;
+          ${getVal(d,"pjo_reason_experienced")} Experienced Worker Check &nbsp;
+          ${getVal(d,"pjo_reason_other")} Other: ${esc(d.pjo_reason_other_text)}
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2"><b>Type of Observation:</b>
+          ${getVal(d,"pjo_type_performance")} Performance Demonstration &nbsp;
+          ${getVal(d,"pjo_type_followup")} Follow-up
+        </td>
+        <td colspan="2"><b>Observer:</b> ${esc(d.pjo_observer)}<br><b>Supervisor:</b> ${esc(d.pjo_supervisor)}</td>
+      </tr>
+    </table>
+
+    <table class="pjo-print-table" style="margin-top:8px">
+      <tr><th colspan="4">EMPLOYEE(S) TO BE OBSERVED</th></tr>
+      <tr>
+        <td><b>Employee #1 Name</b><br>${esc(d.pjo_emp1_name)}</td>
+        <td><b>Occupation</b><br>${esc(d.pjo_emp1_occupation)}</td>
+        <td><b>Employee #2 Name</b><br>${esc(d.pjo_emp2_name)}</td>
+        <td><b>Occupation</b><br>${esc(d.pjo_emp2_occupation)}</td>
+      </tr>
+      <tr>
+        <td colspan="2"><b>Is worker trained and licensed?</b> ${ynVal(d,"pjo_trained").yes} Yes ${ynVal(d,"pjo_trained").no} No</td>
+        <td colspan="2"><b>Training records verified?</b> ${ynVal(d,"pjo_training_records").yes} Yes ${ynVal(d,"pjo_training_records").no} No</td>
+      </tr>
+    </table>
+
+    <table class="pjo-print-table" style="margin-top:8px">
+      <tr><th colspan="3">OBSERVATIONS / АЖИГЛАЛТУУД</th></tr>
+      ${q(1,"Could any practices or conditions observed result in personal injury or near miss? If yes, explain.","q1")}
+      ${q(2,"Could any practices or conditions observed result in property damage? If yes, explain.","q2")}
+      ${q(3,"Were all applicable procedures/standards followed during the observation? If no, explain.","q3")}
+      ${q(4,"What key points in the procedure/standard were noticed during the observation?","q4",false)}
+      ${q(5,"Was any positive recognition given to the employee(s) following the observation?","q5")}
+      ${q(6,"Was any corrective information and instruction given to the employee(s) during the observation?","q6")}
+      ${q(7,"Do the methods and practices observed need review for efficiency and production capability?","q7")}
+      ${q(8,"What should we consider changing in the interest of safety? Ask employee(s) for input.","q8")}
+      ${q(9,"Additional comments / observations.","q9",false)}
+      ${q(10,"Do procedures need to be revised? If yes, how?","q10")}
+    </table>
+
+    <table class="pjo-print-table" style="margin-top:8px">
+      <tr>
+        <td><b>Duration:</b> Start ${esc(d.pjo_start_time)} / Stop ${esc(d.pjo_stop_time)}</td>
+        <td><b>Responsible Person:</b><br>${esc(d.pjo_responsible)}</td>
+        <td><b>Due Date:</b><br>${esc(d.pjo_due_date)}</td>
+      </tr>
+      <tr><td colspan="3"><b>Recommended Follow-up:</b><br>${esc(d.pjo_followup)}</td></tr>
+    </table>
+
+    <table class="pjo-print-table" style="margin-top:8px">
+      <tr><th colspan="3">SIGNATURES</th></tr>
+      <tr><td>Employee #1<br><br>${esc(d.pjo_sig_emp1)}</td><td>Employee #2<br><br>${esc(d.pjo_sig_emp2)}</td><td>Observer / Crew Trainer<br><br>${esc(d.pjo_sig_observer)}</td></tr>
+      <tr><td>Supervisor<br><br>${esc(d.pjo_sig_supervisor)}</td><td>Superintendent / Area Manager<br><br>${esc(d.pjo_sig_manager)}</td><td>Safety Coordinator<br><br>${esc(d.pjo_sig_safety)}</td></tr>
+      <tr><td colspan="3"><b>General Notes:</b><br>${esc(d.pjo_notes)}</td></tr>
+    </table>
+    <div style="text-align:center;margin-top:8px;color:#7f1d1d;font-weight:900">SAFETY - FIRST, LAST, AND ALWAYS</div>
+  </div>`;
+}
+
+function printSingleSavedForm(id, autoPrint=true){
+  const f = savedForms.find(x => x.id === id);
+  if(!f) return alert("Form not found.");
+  const win = window.open("", "_blank");
+  if(!win) return alert("Popup blocked. Allow popups for this site.");
+
+  const content = f.type === "pjo" ? buildPJOPrintHTML(f) : `
+    <h1>${esc(f.title)}</h1>
+    <p><b>Created:</b> ${new Date(f.created_at).toLocaleString()}</p>
+    <p><b>Created By:</b> ${esc(f.created_by)}</p>
+    <table>${Object.entries(f.data||{}).map(([k,v])=>`<tr><th>${esc(k)}</th><td>${esc(typeof v==="boolean"?(v?"Yes":"No"):v)}</td></tr>`).join("")}</table>
+  `;
+
+  win.document.write(`<!DOCTYPE html>
+    <html><head><title>${esc(f.title)}</title>
+    <style>
+      body{font-family:Arial,sans-serif;margin:10px;color:#111}
+      table{width:100%;border-collapse:collapse}
+      th,td{border:1px solid #222;padding:5px;text-align:left;vertical-align:top}
+      th{background:#e5e7eb}
+      .pjo-print-title{text-align:center;font-weight:900;color:#7f1d1d;font-size:16px}
+      .pjo-print-table{width:100%;border-collapse:collapse;font-size:11px}
+      .pjo-print-table th,.pjo-print-table td{border:1px solid #222;padding:4px;vertical-align:top}
+      @media print{@page{size:A4 landscape;margin:8mm}body{margin:0}.pjo-print-page{page-break-after:auto}}
+    </style></head><body>${content}</body></html>`);
+  win.document.close();
+  win.focus();
+  if(autoPrint) setTimeout(()=>win.print(),500);
+}
+
+function printCurrentForm(){
+  const data = collectCurrentForm();
+  const type = document.getElementById("formType")?.value || "pjo";
+  const title = document.getElementById("formType")?.selectedOptions[0]?.textContent || "Form";
+  const temp = {id:"current", type, title, data, created_at:new Date().toISOString(), created_by:currentUser?.email||""};
+  const win = window.open("", "_blank");
+  if(!win) return alert("Popup blocked. Allow popups for this site.");
+  const content = type === "pjo" ? buildPJOPrintHTML(temp) : document.getElementById("currentFormPrintable")?.outerHTML || "";
+  win.document.write(`<!DOCTYPE html><html><head><title>${esc(title)}</title>
+    <style>
+      body{font-family:Arial,sans-serif;margin:10px;color:#111}
+      .pjo-print-title{text-align:center;font-weight:900;color:#7f1d1d;font-size:16px}
+      .pjo-print-table{width:100%;border-collapse:collapse;font-size:11px}
+      .pjo-print-table th,.pjo-print-table td{border:1px solid #222;padding:4px;vertical-align:top}
+      @media print{@page{size:A4 landscape;margin:8mm}body{margin:0}}
+    </style></head><body>${content}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>win.print(),500);
+}
+
+
+function renderSavedForms(){
+  const el = document.getElementById("savedFormsList");
+  if(!el) return;
+  if(typeof updateFormsManagerControls === "function") updateFormsManagerControls();
+  const visible = typeof getVisibleForms === "function" ? getVisibleForms() : savedForms;
+  const badge = (typeof canViewAllForms === "function" && canViewAllForms())
+    ? `<div class="form-filter-badge">Viewing: ${formsViewMode === "all" ? "All Forms" : "My Forms"}</div>`
+    : "";
+  el.innerHTML = badge + (visible.length ? visible.map(f => `
+    <div class="form-doc-card">
+      <b>${esc(f.title || "Form")}</b>
+      <span class="badge">${esc(f.type || "")}</span>
+      <p>${new Date(f.created_at).toLocaleString()}</p>
+      <p>Created by: ${esc(f.created_by || "")}</p>
+      <div class="doc-actions">
+        <button type="button" onclick="viewSavedForm('${f.id}')">View</button>
+        <button type="button" onclick="editSavedForm('${f.id}')">Edit</button>
+        <button type="button" onclick="printSingleSavedForm('${f.id}')">Print</button>
+        <button type="button" class="secondary" onclick="duplicateSavedForm('${f.id}')">Copy</button>
+        <button type="button" class="danger" onclick="deleteSavedForm('${f.id}')">Delete</button>
+      </div>
+    </div>
+  `).join("") : "<div class='notice'>No saved forms yet.</div>");
+}
