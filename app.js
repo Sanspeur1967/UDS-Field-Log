@@ -179,7 +179,7 @@ let entries=JSON.parse(localStorage.getItem("uds_pro_entries")||localStorage.get
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=2.0")};
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=2.1")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
@@ -356,7 +356,7 @@ async function saveEntry(){if(!canWrite()){alert("Viewer role is read-only.");re
 function saveAction(){if(!canWrite()){alert("Viewer role is read-only.");return;}let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 2.0",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 2.1",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
@@ -522,6 +522,60 @@ function getRoleName(){
   return currentUserRole?.role || "Viewer";
 }
 
+
+function roleAction(action){
+  if(action === "users"){
+    showTab("admin");
+    setTimeout(() => {
+      const el = document.getElementById("adminEmail");
+      if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
+    }, 100);
+    return;
+  }
+  if(action === "entries"){
+    showTab("dashboard");
+    const el = document.getElementById("recentLogs");
+    if(el) setTimeout(()=>el.scrollIntoView({behavior:"smooth", block:"start"}), 100);
+    return;
+  }
+  if(action === "actions"){
+    showTab("actions");
+    return;
+  }
+  if(action === "installer"){
+    showTab("admin");
+    setTimeout(() => {
+      const el = document.getElementById("installerStatus");
+      if(el) {
+        el.scrollIntoView({behavior:"smooth", block:"center"});
+        checkInstallerStatus();
+      }
+    }, 150);
+    return;
+  }
+  if(action === "reports"){
+    showTab("report");
+    return;
+  }
+  if(action === "ai"){
+    showTab("ai");
+    return;
+  }
+  if(action === "gallery"){
+    showTab("gallery");
+    return;
+  }
+  if(action === "map"){
+    showTab("map");
+    return;
+  }
+  if(action === "dashboard"){showTab("dashboard");return;}
+  if(action === "entry"){
+    showTab("entry");
+    return;
+  }
+}
+
 function applyRoleView(){
   const role = getRoleName();
   const title = document.getElementById("roleDashboardTitle");
@@ -533,34 +587,34 @@ function applyRoleView(){
     Admin: {
       title:"Admin Dashboard",
       subtitle:"System control, users, production, actions and audit readiness",
-      items:["User roles and access", "All production entries", "All actions", "System installation status", "Reports and AI tools"]
+      items:[{label:"User roles and access",action:"users"},{label:"All production entries",action:"entries"},{label:"All actions",action:"actions"},{label:"System installation status",action:"installer"},{label:"Reports and AI tools",action:"reports"}]
     },
     Manager: {
       title:"Manager Dashboard",
       subtitle:"High-level production, delays, safety and team performance",
-      items:["All headings overview", "Production trends", "Open actions", "Delay hotspots", "AI summaries"]
+      items:[{label:"All headings overview",action:"map"},{label:"Production trends",action:"dashboard"},{label:"Open actions",action:"actions"},{label:"Delay hotspots",action:"ai"},{label:"AI summaries",action:"ai"}]
     },
     Superintendent: {
       title:"Superintendent Dashboard",
       subtitle:"Shift execution, supervisors, headings, actions and handovers",
-      items:["Supervisor entries", "Heading history", "Open actions", "Daily report", "AI handover"]
+      items:[{label:"Supervisor entries",action:"entries"},{label:"Heading history",action:"map"},{label:"Open actions",action:"actions"},{label:"Daily report",action:"reports"},{label:"AI handover",action:"ai"}]
     },
     Supervisor: {
       title:"Supervisor Dashboard",
       subtitle:"Create shift logs, photos, actions and next shift plan",
-      items:["Create entries", "Photo editor", "Own shift actions", "Daily report", "Voice notes"]
+      items:[{label:"Create entries",action:"entry"},{label:"Photo editor",action:"entry"},{label:"Own shift actions",action:"actions"},{label:"Daily report",action:"reports"},{label:"Voice notes",action:"entry"}]
     },
     Viewer: {
       title:"Viewer Dashboard",
       subtitle:"Read-only view for reports and production status",
-      items:["View reports", "View photos", "View heading history", "No editing access"]
+      items:[{label:"View reports",action:"reports"},{label:"View photos",action:"gallery"},{label:"View heading history",action:"map"},{label:"Read-only access",action:"dashboard"}]
     }
   };
 
   const cfg = roleConfig[role] || roleConfig.Viewer;
   title.textContent = cfg.title;
   subtitle.textContent = cfg.subtitle;
-  panel.innerHTML = `<div class="role-banner"><h3>${esc(role)} View</h3><p>${esc(cfg.subtitle)}</p><div class="role-list">${cfg.items.map(i=>`<div>${esc(i)}</div>`).join("")}</div></div>`;
+  panel.innerHTML = `<div class="role-banner"><h3>${esc(role)} View</h3><p>${esc(cfg.subtitle)}</p><div class="role-list">${cfg.items.map(i=>`<button type="button" class="role-action-btn" onclick="roleAction('${i.action}')">${esc(i.label)}</button>`).join("")}</div></div>`;
 
   const entryBtn = document.querySelector('button[data-tab="entry"]');
   const actionsBtn = document.querySelector('button[data-tab="actions"]');

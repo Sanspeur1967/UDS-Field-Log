@@ -1,10 +1,10 @@
 {
   "name": "UDS Development Pro Enterprise",
   "short_name": "UDS Pro",
-  "start_url": "./index.html?enterprise=2.0",
+  "start_url": "./index.html?enterprise=2.1",
   "display": "standalone",
   "background_color": "#edf2f7",
   "theme_color": "#0b1220",
-  "description": "UDS Development Pro Enterprise 2.0 Master Installer.",
+  "description": "UDS Development Pro Enterprise 2.1 Role Button Fix.",
   "icons": []
 }

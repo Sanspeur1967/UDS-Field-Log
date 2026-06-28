@@ -263,3 +263,22 @@ button.secondary{background:#475569}button.success{background:#16a34a}button.dan
 .installer-ok{color:#166534;font-weight:900}
 .installer-bad{color:#991b1b;font-weight:900}
 @media(min-width:760px){.role-list{grid-template-columns:repeat(3,1fr)}}
+
+/* Enterprise 2.1 role card buttons */
+.role-action-btn{
+  display:block;
+  width:100%;
+  text-align:left;
+  background:#eef2ff;
+  color:#172033;
+  border:0;
+  border-radius:14px;
+  padding:14px 16px;
+  margin:0;
+  font-size:18px;
+  font-weight:900;
+}
+.role-action-btn:active{
+  transform:scale(.98);
+  background:#dbeafe;
+}
