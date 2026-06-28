@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro Enterprise 1.3</title>
+<title>UDS Development Pro Enterprise 2.0</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=1.3">
+<link rel="stylesheet" href="style.css?v=2.0">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -41,7 +41,7 @@
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">Enterprise 1.3 • login fix</p>
+    <p id="syncStatus">Enterprise 2.0 • master installer</p>
   </div>
   <div class="header-actions">
     <span id="currentUserEmail">Not signed in</span>
@@ -61,7 +61,8 @@
 
 <main>
 <section id="dashboard" class="tab active">
-  <div class="section-title"><h2>Supervisor Dashboard</h2><p>Production, delays, safety and actions</p></div>
+  <div class="section-title"><h2 id="roleDashboardTitle">Dashboard</h2><p id="roleDashboardSubtitle">Production, delays, safety and actions</p></div>
+  <div id="roleViewPanel" class="role-view-panel"></div>
   <div class="tiles">
     <div class="tile"><b id="tileHeadings">0</b><span>Headings</span></div>
     <div class="tile"><b id="tileMetres">0.0</b><span>Metres</span></div>
@@ -233,6 +234,13 @@
   </div>
 
   <div class="form-card admin-only">
+    <h3>Automatic Installer Status</h3>
+    <p class="hint">Run the included SQL file once in Supabase SQL Editor. The app will then check required tables and policies.</p>
+    <button type="button" class="success" onclick="checkInstallerStatus()">Check Installation</button>
+    <div id="installerStatus"></div>
+  </div>
+
+  <div class="form-card admin-only">
     <h3>Add / Update User Role</h3>
     <label>Email<input id="adminEmail" type="email" placeholder="user@company.com"></label>
     <label>Full Name<input id="adminFullName" placeholder="Full name"></label>
@@ -306,7 +314,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=1.3"></script>
-<script src="app.js?v=1.3"></script>
+<script src="config.js?v=2.0"></script>
+<script src="app.js?v=2.0"></script>
 </body>
 </html>
