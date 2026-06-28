@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro Enterprise 3.4</title>
+<title>UDS Development Pro Enterprise 3.5</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=3.4">
+<link rel="stylesheet" href="style.css?v=3.5">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -41,11 +41,12 @@
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">Enterprise 3.4 • entries register</p>
+    <p id="syncStatus">Enterprise 3.5 • bilingual forms + signatures</p>
   </div>
   <div class="header-actions">
     <span id="currentUserEmail">Not signed in</span>
     <button class="header-sync" onclick="syncAll()">Sync</button>
+    <select id="languageSelect" class="language-select" onchange="setLanguage(this.value)"><option value="en">EN</option><option value="mn">MN</option></select>
     <button class="header-logout" onclick="logoutUser()">Logout</button>
   </div>
 </header>
@@ -217,7 +218,7 @@
     <label>Document Type
       <select id="formType" onchange="renderSelectedForm()">
         <option value="pjo">Planned Job Observation</option>
-        <option value="cascaded">Cascaded Coaching</option>
+        <option value="cascaded">Safety Cascading Coaching</option>
         <option value="lif">Leaders in Field</option>
         <option value="custom">Custom Field Form</option>
       </select>
@@ -395,7 +396,19 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=3.4"></script>
-<script src="app.js?v=3.4"></script>
+<script src="config.js?v=3.5"></script>
+<script src="app.js?v=3.5"></script>
+
+<div id="signatureModal" class="signature-modal hidden">
+  <div class="signature-card">
+    <h2 id="signatureTitle">Signature</h2>
+    <canvas id="signatureCanvas" width="900" height="360"></canvas>
+    <div class="quick">
+      <button type="button" onclick="clearSignaturePad()">Clear</button>
+      <button type="button" class="secondary" onclick="closeSignaturePad()">Cancel</button>
+      <button type="button" class="save-btn" onclick="saveSignaturePad()">Save Signature</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

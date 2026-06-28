@@ -1,10 +1,10 @@
 {
   "name": "UDS Development Pro Enterprise",
   "short_name": "UDS Pro",
-  "start_url": "./index.html?enterprise=3.4",
+  "start_url": "./index.html?enterprise=3.5",
   "display": "standalone",
   "background_color": "#edf2f7",
   "theme_color": "#0b1220",
-  "description": "UDS Development Pro Enterprise 3.4 Entries Register.",
+  "description": "UDS Development Pro Enterprise 3.5 Bilingual Forms and Signatures.",
   "icons": []
 }

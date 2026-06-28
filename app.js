@@ -181,7 +181,7 @@ let savedForms=JSON.parse(localStorage.getItem("uds_enterprise_forms")||"[]");
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=3.2")};
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();applyLanguage();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=3.5")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="entriesRegister")renderEntriesRegister();if(id==="forms"){renderSelectedForm();renderSavedForms();}if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
@@ -358,7 +358,7 @@ async function saveEntry(){if(!canWrite()){alert("Viewer role is read-only.");re
 function saveAction(){if(!canWrite()){alert("Viewer role is read-only.");return;}let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 3.2",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 3.5",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
@@ -1736,4 +1736,252 @@ function applyRoleView(){
 
   const adminBtn = document.getElementById("adminNavButton");
   if(adminBtn) adminBtn.style.display = (typeof isActualAdmin === "function" && isActualAdmin()) ? "block" : "none";
+}
+
+
+
+/* Enterprise 3.5 Bilingual + Official Forms + Signature Pad */
+let appLang = localStorage.getItem("uds_lang") || "en";
+let activeSignatureField = null;
+let signatureDrawing = false;
+let signatureCtx = null;
+
+const I18N = {
+  en:{home:"Home",entry:"Entry",forms:"Forms",map:"Map",ai:"AI",more:"More",logout:"Logout",sync:"Sync",formsCentre:"Forms Centre",savedForms:"Saved Forms"},
+  mn:{home:"Нүүр",entry:"Бүртгэл",forms:"Маягт",map:"Зураглал",ai:"AI",more:"Бусад",logout:"Гарах",sync:"Синк",formsCentre:"Маягтын төв",savedForms:"Хадгалсан маягт"}
+};
+function t(k){ return (I18N[appLang] && I18N[appLang][k]) || I18N.en[k] || k; }
+function setLanguage(lang){
+  appLang = lang === "mn" ? "mn" : "en";
+  localStorage.setItem("uds_lang", appLang);
+  applyLanguage();
+  if(typeof renderSelectedForm === "function") renderSelectedForm();
+  if(typeof renderAll === "function") renderAll();
+}
+function applyLanguage(){
+  const sel=document.getElementById("languageSelect");
+  if(sel) sel.value=appLang;
+  document.querySelectorAll(".top-nav button").forEach(btn=>{
+    const id=btn.dataset.tab;
+    if(id==="dashboard") btn.textContent=t("home");
+    if(id==="entry") btn.textContent=t("entry");
+    if(id==="forms") btn.textContent=t("forms");
+    if(id==="map") btn.textContent=t("map");
+    if(id==="ai") btn.textContent=t("ai");
+    if(id==="more") btn.textContent=t("more");
+  });
+  document.querySelectorAll(".header-logout").forEach(b=>b.textContent=t("logout"));
+  document.querySelectorAll(".header-sync").forEach(b=>b.textContent=t("sync"));
+}
+
+function openSignaturePad(fieldId, title){
+  activeSignatureField = fieldId;
+  const modal = document.getElementById("signatureModal");
+  const canvas = document.getElementById("signatureCanvas");
+  const titleEl = document.getElementById("signatureTitle");
+  if(!modal || !canvas) return alert("Signature pad not available.");
+  if(titleEl) titleEl.textContent = title || "Signature";
+  modal.classList.remove("hidden");
+  signatureCtx = canvas.getContext("2d");
+  signatureCtx.fillStyle = "white";
+  signatureCtx.fillRect(0,0,canvas.width,canvas.height);
+  signatureCtx.strokeStyle = "#111827";
+  signatureCtx.lineWidth = 4;
+  signatureCtx.lineCap = "round";
+  signatureCtx.lineJoin = "round";
+  const existing = document.getElementById(fieldId)?.value;
+  if(existing){
+    const img = new Image();
+    img.onload = () => signatureCtx.drawImage(img,0,0,canvas.width,canvas.height);
+    img.src = existing;
+  }
+}
+function closeSignaturePad(){document.getElementById("signatureModal")?.classList.add("hidden");activeSignatureField=null;}
+function clearSignaturePad(){const c=document.getElementById("signatureCanvas");if(c&&signatureCtx){signatureCtx.fillStyle="white";signatureCtx.fillRect(0,0,c.width,c.height);}}
+function sigPos(e){const c=document.getElementById("signatureCanvas");const r=c.getBoundingClientRect();const t=e.touches&&e.touches[0]?e.touches[0]:e;return{x:(t.clientX-r.left)*(c.width/r.width),y:(t.clientY-r.top)*(c.height/r.height)}}
+function sigStart(e){e.preventDefault();signatureDrawing=true;const p=sigPos(e);signatureCtx.beginPath();signatureCtx.moveTo(p.x,p.y)}
+function sigMove(e){if(!signatureDrawing)return;e.preventDefault();const p=sigPos(e);signatureCtx.lineTo(p.x,p.y);signatureCtx.stroke()}
+function sigEnd(){signatureDrawing=false}
+function saveSignaturePad(){
+  const c=document.getElementById("signatureCanvas");
+  if(!c||!activeSignatureField)return;
+  const data=c.toDataURL("image/png");
+  const hidden=document.getElementById(activeSignatureField);
+  if(hidden) hidden.value=data;
+  const prev=document.getElementById(activeSignatureField+"_preview");
+  if(prev) prev.innerHTML=`<img src="${data}" alt="signature">`;
+  closeSignaturePad();
+}
+function initSignaturePad(){
+  const c=document.getElementById("signatureCanvas");
+  if(!c||c.dataset.ready)return;
+  c.dataset.ready="1";
+  c.addEventListener("mousedown",sigStart);c.addEventListener("mousemove",sigMove);window.addEventListener("mouseup",sigEnd);
+  c.addEventListener("touchstart",sigStart,{passive:false});c.addEventListener("touchmove",sigMove,{passive:false});window.addEventListener("touchend",sigEnd);
+}
+setTimeout(()=>{initSignaturePad();applyLanguage();},500);
+
+function sigField(label,id){
+  return `<div class="signature-box">
+    <label>${esc(label)}</label>
+    <input type="hidden" id="${id}">
+    <div class="signature-preview" id="${id}_preview">${appLang==="mn"?"Гарын үсэг оруулаагүй":"No signature captured"}</div>
+    <div class="signature-btn-row">
+      <button type="button" onclick="openSignaturePad('${id}','${escAttr(label)}')">${appLang==="mn"?"Гарын үсэг":"Sign"}</button>
+      <button type="button" class="secondary" onclick="document.getElementById('${id}').value='';document.getElementById('${id}_preview').innerHTML='${appLang==="mn"?"Гарын үсэг оруулаагүй":"No signature captured"}';">${appLang==="mn"?"Арилгах":"Clear"}</button>
+    </div>
+  </div>`;
+}
+
+function renderSelectedForm(){
+  const type=document.getElementById("formType")?.value||"pjo";
+  if(type==="pjo") renderPJOForm();
+  else if(type==="cascaded") renderCascadingCoachingForm();
+  else renderPlaceholderForm(document.getElementById("formType")?.selectedOptions[0]?.textContent||"Form");
+}
+
+function renderCascadingCoachingForm(){
+  const today=new Date().toISOString().split("T")[0];
+  const en=appLang==="en";
+  dynamicFormArea.innerHTML=`
+  <div class="form-template" id="currentFormPrintable">
+    <div class="form-header-dayan">
+      <div class="form-logo"><span>D</span>AYAN</div>
+      <div class="form-title">
+        <h2>${en?"SAFETY CASCADING COACHING":"АЮУЛГҮЙ АЖИЛЛАГААНЫ ШАТАЛСАН КӨҮЧИНГ"}</h2>
+        <p>${en?"АЮУЛГҮЙ АЖИЛЛАГААНЫ ШАТАЛСАН КӨҮЧИНГ":"SAFETY CASCADING COACHING"}</p>
+      </div>
+    </div>
+    <div class="form-section"><h3>${en?"Header":"Ерөнхий мэдээлэл"}</h3><div class="form-grid">
+      <label>${en?"Date":"Огноо"}<input id="scc_date" type="date" value="${today}"></label>
+      <label>${en?"Learner Name":"Суралцагчийн нэр"}<input id="scc_learner"></label>
+      <label>${en?"Coach #1":"I көүчийн нэр"}<input id="scc_coach1"></label>
+      <label>${en?"Coach #2":"II көүчийн нэр"}<input id="scc_coach2"></label>
+      <label>${en?"Department / Team":"Хэлтэс / Баг"}<input id="scc_department"></label>
+      <label>${en?"Job Title":"Албан тушаал"}<input id="scc_job_title"></label>
+    </div></div>
+    <div class="form-section"><h3>${en?"Safety Process Conducted During Coaching":"Көүчингийн явцад хийгдсэн аюулгүй ажиллагааны процесс"}</h3><div class="form-check-grid">
+      ${check("scc_process_preshift",en?"Pre-Shift Meeting":"Ээлжийн өмнөх хурал")}
+      ${check("scc_process_discussion",en?"Safety Discussion":"Аюулгүй ажиллагааны хэлэлцүүлэг")}
+      ${check("scc_process_crm","CRM")}
+      ${check("scc_process_ptha",en?"Pre-Task Hazard Assessment":"Ажлын өмнөх аюул эрсдэлийн үнэлгээ")}
+      ${check("scc_process_other",en?"Other":"Бусад")}
+    </div><label>${en?"Other":"Бусад"}<input id="scc_process_other_text"></label></div>
+    <div class="form-section"><h3>${en?"Learner Self-Reflection":"Суралцагчийн өөрийн үнэлгээ"}</h3>
+      <label>${en?"What went well? Write 3–4 items.":"Юу сайн болсон бэ? 3–4 зүйл бичнэ үү."}<textarea id="scc_self_went_well"></textarea></label>
+      <label>${en?"What would you change or improve? Write 1–2 items.":"Юуг өөрчилж сайжруулах вэ? 1–2 зүйл бичнэ үү."}<textarea id="scc_self_improvements"></textarea></label>
+    </div>
+    <div class="form-section"><h3>${en?"Coaching Discussion #1":"I Көүчинг хэлэлцүүлэг"}</h3>
+      <label>${en?"Coach provides positive feedback. Write 3–4 items which went well.":"Көүч эерэг санал өгнө. Сайн болсон 3–4 зүйлийг бичнэ үү."}<textarea id="scc_discussion1"></textarea></label>
+      <label>${en?"What may be done better in the future? Write 1–2 improvements.":"Цаашид юуг сайжруулах вэ? 1–2 сайжруулалт бичнэ үү."}<textarea id="scc_discussion1_improve"></textarea></label>
+    </div>
+    <div class="form-section"><h3>${en?"Coaching Discussion #2":"II Көүчинг хэлэлцүүлэг"}</h3>
+      <label>${en?"Reinforce Coach #1 feedback and add improvement opportunity.":"I көүчийн өгсөн зөвлөмжийг бататгаж, нэмэлт сайжруулах боломжийг бичнэ үү."}<textarea id="scc_discussion2"></textarea></label>
+    </div>
+    <div class="form-section"><h3>${en?"Summarize Coaching Session":"Көүчингийн дүгнэлт"}</h3>
+      <label>${en?"Summarize the conversation and agreed improvement actions.":"Ярилцлагыг нэгтгэн дүгнэж, тохирсон сайжруулалтын ажлуудыг бичнэ үү."}<textarea id="scc_summary"></textarea></label>
+      <label>${en?"Key Improvement Actions":"Гол сайжруулах ажлууд"}<textarea id="scc_actions"></textarea></label>
+    </div>
+    <div class="form-section"><h3>${en?"Signatures":"Гарын үсэг"}</h3><div class="form-grid">
+      ${sigField(en?"Learner Signature":"Суралцагчийн гарын үсэг","scc_sig_learner")}
+      ${sigField(en?"Coach #1 Signature":"I көүчийн гарын үсэг","scc_sig_coach1")}
+      ${sigField(en?"Coach #2 Signature":"II көүчийн гарын үсэг","scc_sig_coach2")}
+    </div></div>
+    <button type="button" class="save-btn" onclick="saveFillableForm()">${en?"Save Safety Cascading Coaching":"Шаталсан көүчинг хадгалах"}</button>
+    <button type="button" class="secondary" onclick="printCurrentForm()">${en?"Print / PDF":"Хэвлэх / PDF"}</button>
+  </div>`;
+}
+
+function collectCurrentForm(){
+  const fields=Array.from(document.querySelectorAll("#currentFormPrintable input,#currentFormPrintable textarea,#currentFormPrintable select"));
+  const data={};
+  fields.forEach(el=>{
+    if(el.type==="checkbox") data[el.id]=el.checked;
+    else if(el.type==="radio"){ if(el.checked) data[el.name]=el.value; }
+    else if(el.type!=="file") data[el.id]=el.value;
+  });
+  return data;
+}
+function saveFillableForm(){
+  if(typeof canWrite==="function"&&!canWrite()){alert("Read-only role.");return;}
+  const type=document.getElementById("formType")?.value||"pjo";
+  const title=document.getElementById("formType")?.selectedOptions[0]?.textContent||"Form";
+  savedForms.unshift({id:"form_"+Date.now(),type,title,data:collectCurrentForm(),created_at:new Date().toISOString(),created_by:currentUser?.email||"",role:typeof getRoleName==="function"?getRoleName():""});
+  saveFormsLocal();renderSavedForms();alert(title+"\\n"+(appLang==="mn"?"Орон нутгийн санах ойд хадгалсан.":"Saved locally."));
+}
+
+function buildSCCPrintHTML(f){
+  const d=f.data||{};
+  const cb=id=>d[id]?"☑":"☐";
+  const sig=id=>d[id]?`<img class="print-signature-img" src="${d[id]}">`:"";
+  return `<div>
+    <table class="official-print-table">
+      <tr><td style="width:22%;font-size:22px;font-weight:900;color:#1e3a8a"><span style="color:#991b1b">D</span>AYAN</td><td colspan="3" style="text-align:center;font-size:16px;font-weight:900">АЮУЛГҮЙ АЖИЛЛАГААНЫ ШАТАЛСАН КӨҮЧИНГ /<br>SAFETY CASCADING COACHING</td></tr>
+      <tr class="official-light"><td><b>Огноо / Date</b><br>${esc(d.scc_date)}</td><td><b>Нэр / Name</b><br>${esc(d.scc_learner)}</td><td><b>Гарын үсэг / Signature</b><br>${sig("scc_sig_learner")}</td><td><b>Албан тушаал / Job title</b><br>${esc(d.scc_job_title)}</td></tr>
+      <tr><td><b>Суралцагчийн нэр / Name of Learner</b></td><td colspan="3">${esc(d.scc_learner)}</td></tr>
+      <tr><td><b>I көүчийн нэр / Name of Coach #1</b></td><td>${esc(d.scc_coach1)}</td><td><b>Signature</b></td><td>${sig("scc_sig_coach1")}</td></tr>
+      <tr><td><b>II көүчийн нэр / Name of Coach #2</b></td><td>${esc(d.scc_coach2)}</td><td><b>Signature</b></td><td>${sig("scc_sig_coach2")}</td></tr>
+      <tr><td><b>Хэлтэс / Department</b></td><td colspan="3">${esc(d.scc_department)}</td></tr>
+      <tr class="official-grey"><td colspan="4">Уулзалтын үеэр аюулгүй ажиллагааны ямар процесс явагдсан бэ? / Which safety process was conducted during the coaching session?</td></tr>
+      <tr><td>${cb("scc_process_preshift")} Pre-Shift Meeting</td><td>${cb("scc_process_discussion")} Safety Discussion</td><td>${cb("scc_process_crm")} CRM</td><td>${cb("scc_process_ptha")} Pre-Task Hazard Assessment<br>${cb("scc_process_other")} Other: ${esc(d.scc_process_other_text)}</td></tr>
+      <tr class="official-grey"><td colspan="4">Supervisor Self-Reflection / Суралцагчийн өөрийн үнэлгээ</td></tr>
+      <tr><td colspan="4"><b>What went well?</b><br>${esc(d.scc_self_went_well)}</td></tr>
+      <tr><td colspan="4"><b>Suggested improvements</b><br>${esc(d.scc_self_improvements)}</td></tr>
+      <tr class="official-grey"><td colspan="4">I Coaching Discussion / I Көүчинг хэлэлцүүлэг</td></tr>
+      <tr><td colspan="4"><b>Positive feedback / What went well</b><br>${esc(d.scc_discussion1)}</td></tr>
+      <tr><td colspan="4"><b>Improvements</b><br>${esc(d.scc_discussion1_improve)}</td></tr>
+      <tr class="official-grey"><td colspan="4">II Coaching Discussion / II Көүчинг хэлэлцүүлэг</td></tr>
+      <tr><td colspan="4">${esc(d.scc_discussion2)}</td></tr>
+      <tr class="official-grey"><td colspan="4">Summarize Coaching Session / Көүчингийн дүгнэлт</td></tr>
+      <tr><td colspan="4"><b>Summary</b><br>${esc(d.scc_summary)}<br><br><b>Key Improvement Actions</b><br>${esc(d.scc_actions)}</td></tr>
+    </table></div>`;
+}
+
+function printCurrentForm(){
+  const type=document.getElementById("formType")?.value||"pjo";
+  const title=document.getElementById("formType")?.selectedOptions[0]?.textContent||"Form";
+  const f={type,title,data:collectCurrentForm(),created_at:new Date().toISOString(),created_by:currentUser?.email||""};
+  let content="";
+  if(type==="cascaded") content=buildSCCPrintHTML(f);
+  else if(type==="pjo" && typeof buildPJOPrintHTML==="function") content=buildPJOPrintHTML(f);
+  else content=document.getElementById("currentFormPrintable")?.outerHTML||"";
+  const win=window.open("","_blank");
+  if(!win) return alert("Popup blocked. Allow popups for this site.");
+  win.document.write(`<!DOCTYPE html><html><head><title>${esc(title)}</title><style>
+    body{font-family:Arial,sans-serif;margin:8px;color:#111}
+    .official-print-table{width:100%;border-collapse:collapse;font-size:10.5px;line-height:1.15}
+    .official-print-table td,.official-print-table th{border:1px solid #111;padding:4px;vertical-align:top}
+    .official-grey{background:#737373!important;color:white!important;font-weight:900}
+    .official-light{background:#e5e5e5!important}
+    .print-signature-img{max-width:190px;max-height:55px}
+    .pjo-print-title{text-align:center;font-weight:900;color:#7f1d1d;font-size:16px}
+    .pjo-print-table{width:100%;border-collapse:collapse;font-size:11px}
+    .pjo-print-table th,.pjo-print-table td{border:1px solid #222;padding:4px;vertical-align:top}
+    @media print{@page{size:A4 landscape;margin:7mm}body{margin:0}}
+  </style></head><body>${content}</body></html>`);
+  win.document.close();win.focus();setTimeout(()=>win.print(),500);
+}
+
+function printSingleSavedForm(id, autoPrint=true){
+  const f=savedForms.find(x=>x.id===id);
+  if(!f)return alert("Form not found.");
+  let content="";
+  if(f.type==="cascaded") content=buildSCCPrintHTML(f);
+  else if(f.type==="pjo" && typeof buildPJOPrintHTML==="function") content=buildPJOPrintHTML(f);
+  else content=`<h1>${esc(f.title)}</h1><pre>${esc(JSON.stringify(f.data,null,2))}</pre>`;
+  const win=window.open("","_blank");
+  if(!win)return alert("Popup blocked.");
+  win.document.write(`<!DOCTYPE html><html><head><title>${esc(f.title)}</title><style>
+    body{font-family:Arial,sans-serif;margin:8px;color:#111}
+    .official-print-table{width:100%;border-collapse:collapse;font-size:10.5px;line-height:1.15}
+    .official-print-table td,.official-print-table th{border:1px solid #111;padding:4px;vertical-align:top}
+    .official-grey{background:#737373!important;color:white!important;font-weight:900}
+    .official-light{background:#e5e5e5!important}
+    .print-signature-img{max-width:190px;max-height:55px}
+    .pjo-print-title{text-align:center;font-weight:900;color:#7f1d1d;font-size:16px}
+    .pjo-print-table{width:100%;border-collapse:collapse;font-size:11px}
+    .pjo-print-table th,.pjo-print-table td{border:1px solid #222;padding:4px;vertical-align:top}
+    @media print{@page{size:A4 landscape;margin:7mm}body{margin:0}}
+  </style></head><body>${content}</body></html>`);
+  win.document.close();win.focus();if(autoPrint)setTimeout(()=>win.print(),500);
 }
