@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro Enterprise 1.0</title>
+<title>UDS Development Pro Enterprise 1.1</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=1.0">
+<link rel="stylesheet" href="style.css?v=1.1">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -30,7 +30,7 @@
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">Enterprise 1.0 • secure login</p>
+    <p id="syncStatus">Enterprise 1.1 • admin console</p>
   </div>
   <div class="header-actions">
     <span id="currentUserEmail">Not signed in</span>
@@ -181,6 +181,7 @@
     <button data-go="actions">Actions</button>
     <button data-go="report" class="secondary">Reports</button>
     <button data-go="settings" class="secondary">Settings</button>
+    <button data-go="admin" class="ai" id="adminNavButton">Admin</button>
   </div>
 </section>
 
@@ -209,6 +210,46 @@
     <button type="button" class="secondary" onclick="exportBackup()">Backup JSON</button>
   </div>
   <div id="reportOutput"></div>
+</section>
+
+
+<section id="admin" class="tab hidden-tab">
+  <div class="section-title"><h2>Admin Console</h2><p>Manage users, roles and access</p></div>
+
+  <div class="notice">
+    <b>Admin Status</b>
+    <p id="adminStatus">Checking role...</p>
+  </div>
+
+  <div class="form-card admin-only">
+    <h3>Add / Update User Role</h3>
+    <label>Email<input id="adminEmail" type="email" placeholder="user@company.com"></label>
+    <label>Full Name<input id="adminFullName" placeholder="Full name"></label>
+    <label>Department<input id="adminDepartment" placeholder="UDS Development"></label>
+    <label>Crew<input id="adminCrew" placeholder="Crew / Shift"></label>
+    <label>Position<input id="adminPosition" placeholder="Supervisor / Superintendent"></label>
+    <label>Role
+      <select id="adminRole">
+        <option>Admin</option>
+        <option>Manager</option>
+        <option>Superintendent</option>
+        <option>Supervisor</option>
+        <option>Viewer</option>
+      </select>
+    </label>
+    <label>Active
+      <select id="adminActive">
+        <option value="true">Active</option>
+        <option value="false">Disabled</option>
+      </select>
+    </label>
+
+    <button type="button" onclick="saveUserRole()">Save / Update Role</button>
+    <button type="button" class="secondary" onclick="loadUserRoles()">Refresh Users</button>
+  </div>
+
+  <h3>Users</h3>
+  <div id="userRoleList"></div>
 </section>
 
 <section id="settings" class="tab hidden-tab">
@@ -254,7 +295,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=1.0"></script>
-<script src="app.js?v=1.0"></script>
+<script src="config.js?v=1.1"></script>
+<script src="app.js?v=1.1"></script>
 </body>
 </html>

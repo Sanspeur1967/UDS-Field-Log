@@ -1,5 +1,6 @@
 
 let currentUser = null;
+let currentUserRole = null;
 let supabaseClient = null;
 
 function initSupabase(){
@@ -23,19 +24,22 @@ async function initAuth(){
 
   supabaseClient.auth.onAuthStateChange((_event, session) => {
     currentUser = session?.user || null;
-    updateAuthUI();
+    await updateAuthUI();
     renderAll();
   });
 }
 
-function updateAuthUI(){
+async function updateAuthUI(){
   if(currentUser){
     authScreen.classList.add("hidden");
     currentUserEmail.textContent = currentUser.email || "Signed in";
+    await loadCurrentUserRole();
   }else{
     authScreen.classList.remove("hidden");
     currentUserEmail.textContent = "Not signed in";
+    currentUserRole = null;
   }
+  updateAdminVisibility();
 }
 
 async function loginUser(){
@@ -98,8 +102,8 @@ let entries=JSON.parse(localStorage.getItem("uds_pro_entries")||localStorage.get
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=1.0")};
-function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="gallery")renderGallery();if(id==="map")renderMineMap();window.scrollTo(0,0)}
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=1.1")};
+function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
 function checkSupabase(){syncStatus.textContent=supabaseReady()?"v6 Enterprise • online sync configured":"v6 Enterprise • offline mode only";supabaseStatus.textContent=supabaseReady()?`Connected: ${SUPABASE_URL}`:"Not connected. Add publishable/anon key to config.js."}
@@ -275,7 +279,7 @@ async function saveEntry(){let e=buildEntry();if(!e.heading||!e.job){alert("Add 
 function saveAction(){let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 1.0",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 1.1",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
@@ -285,6 +289,127 @@ async function loadCloudCount(){if(!supabaseReady()){alert("Supabase key is not 
 async function callAI(task,payload){if(!supabaseReady()){alert("Supabase key is not configured.");return}aiOutput.textContent="Working...";try{let r=await fetch(`${SUPABASE_URL}/functions/v1/${AI_FUNCTION_NAME}`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({task,payload})});let data=await r.json();aiStatus.textContent="AI function working.";aiOutput.textContent=data.result||JSON.stringify(data,null,2)}catch(e){aiStatus.textContent="AI error.";aiOutput.textContent="AI error: "+e.message}}
 function allPayload(){return{entries,actions,question:val("rawNote"),date:val("aiDate")||val("reportDate")}} function aiPayloadForDate(){let d=val("aiDate")||val("reportDate");return{date:d,entries:entries.filter(e=>e.date===d),actions:actions.filter(a=>a.status!=="Closed")}}
 function aiDailyReport(){callAI("daily_report",aiPayloadForDate())} function aiShiftHandover(){callAI("shift_handover",aiPayloadForDate())} function aiTrendAnalysis(){callAI("trend_analysis",allPayload())} function aiSupervisorDashboard(){callAI("supervisor_dashboard",allPayload())} function aiAskQuestion(){callAI("voice_ai_assistant",allPayload())} function aiSafetySummary(){callAI("safety_summary",aiPayloadForDate())} function testAI(){callAI("test",{message:"Confirm UDS AI Edge Function is working."})}
+
+
+async function loadCurrentUserRole(){
+  if(!currentUser || !supabaseClient) return;
+  try{
+    const { data, error } = await supabaseClient
+      .from("user_roles")
+      .select("*")
+      .eq("email", currentUser.email)
+      .eq("active", true)
+      .maybeSingle();
+
+    if(error) throw error;
+    currentUserRole = data || null;
+    if(currentUserRole){
+      currentUserEmail.textContent = `${currentUser.email} (${currentUserRole.role})`;
+    }
+  }catch(e){
+    console.warn("Role lookup failed:", e.message);
+    currentUserRole = null;
+  }
+}
+
+function isAdmin(){
+  return currentUserRole && currentUserRole.role === "Admin";
+}
+
+function updateAdminVisibility(){
+  const btn = document.getElementById("adminNavButton");
+  const adminCards = document.querySelectorAll(".admin-only");
+  if(btn) btn.style.display = isAdmin() ? "block" : "none";
+  adminCards.forEach(card => card.classList.toggle("locked", !isAdmin()));
+  const status = document.getElementById("adminStatus");
+  if(status){
+    if(!currentUser) status.textContent = "Not signed in.";
+    else if(isAdmin()) status.textContent = `Admin access granted for ${currentUser.email}.`;
+    else status.textContent = `Signed in as ${currentUser.email}. Admin role required.`;
+  }
+}
+
+async function saveUserRole(){
+  if(!isAdmin()){
+    alert("Admin role required.");
+    return;
+  }
+  const payload = {
+    email: adminEmail.value.trim(),
+    full_name: adminFullName.value.trim(),
+    department: adminDepartment.value.trim(),
+    crew: adminCrew.value.trim(),
+    position: adminPosition.value.trim(),
+    role: adminRole.value,
+    active: adminActive.value === "true"
+  };
+  if(!payload.email){
+    alert("Email required.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("user_roles")
+    .upsert(payload, { onConflict: "email" });
+
+  if(error){
+    alert("Could not save role: " + error.message);
+    return;
+  }
+  alert("Role saved.");
+  await loadUserRoles();
+}
+
+async function loadUserRoles(){
+  if(!currentUser){
+    userRoleList.innerHTML = "<div class='notice'>Login required.</div>";
+    return;
+  }
+  if(!isAdmin()){
+    userRoleList.innerHTML = "<div class='notice'>Admin role required.</div>";
+    updateAdminVisibility();
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("user_roles")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  if(error){
+    userRoleList.innerHTML = `<div class='notice'>${esc(error.message)}</div>`;
+    return;
+  }
+
+  userRoleList.innerHTML = (data || []).map(u => `
+    <div class="user-card ${u.active ? "" : "disabled"}">
+      <b>${esc(u.full_name || u.email)}</b>
+      <span class="user-role-badge role-${String(u.role || "").toLowerCase()}">${esc(u.role)}</span>
+      <p>${esc(u.email)}</p>
+      <p>${esc(u.position || "")} ${u.department ? "• " + esc(u.department) : ""} ${u.crew ? "• " + esc(u.crew) : ""}</p>
+      <p><b>Status:</b> ${u.active ? "Active" : "Disabled"}</p>
+      <button type="button" onclick="editUserRole('${escAttr(u.email)}')">Edit</button>
+    </div>
+  `).join("") || "<div class='notice'>No users found.</div>";
+}
+
+async function editUserRole(email){
+  if(!isAdmin()) return;
+  const { data, error } = await supabaseClient.from("user_roles").select("*").eq("email", email).maybeSingle();
+  if(error || !data){
+    alert("User not found.");
+    return;
+  }
+  adminEmail.value = data.email || "";
+  adminFullName.value = data.full_name || "";
+  adminDepartment.value = data.department || "";
+  adminCrew.value = data.crew || "";
+  adminPosition.value = data.position || "";
+  adminRole.value = data.role || "Viewer";
+  adminActive.value = data.active ? "true" : "false";
+  window.scrollTo(0,0);
+}
+
 
 function renderAll(){renderDashboard();renderActions();renderGallery();renderMineMap();checkSupabase()}
 function renderDashboard(){let today=new Date().toISOString().split("T")[0],todays=entries.filter(e=>e.date===today),open=actions.filter(a=>a.status!=="Closed");tileHeadings.textContent=todays.length;tileMetres.textContent=sum(todays,"metresAdvanced").toFixed(1);tileBolts.textContent=sum(todays,"boltsInstalled");tileShotcrete.textContent=sum(todays,"shotcreteM3").toFixed(1);tileDelay.textContent=sum(todays,"delayHours").toFixed(1);tileActions.textContent=open.length;recentLogs.innerHTML=entries.slice(0,5).map(logCard).join("");headingDashboard.innerHTML=Object.entries(groupBy(entries,"heading")).map(([h,arr])=>`<div class="item"><b>${esc(h)}</b><br>${arr.length} entries | ${sum(arr,"metresAdvanced").toFixed(1)}m | ${sum(arr,"boltsInstalled")} bolts | ${sum(arr,"delayHours").toFixed(1)} delay hrs</div>`).join("")}
