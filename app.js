@@ -1,11 +1,73 @@
+
+let currentUser = null;
+
+async function supabaseAuthRequest(endpoint, body){
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/${endpoint}`, {
+    method:"POST",
+    headers:{"apikey":SUPABASE_ANON_KEY,"Content-Type":"application/json"},
+    body:JSON.stringify(body)
+  });
+  const data = await r.json();
+  if(!r.ok) throw new Error(data.msg || data.error_description || data.error || JSON.stringify(data));
+  return data;
+}
+function setSession(data){
+  if(data.access_token){
+    localStorage.setItem("uds_access_token", data.access_token);
+    localStorage.setItem("uds_refresh_token", data.refresh_token || "");
+    localStorage.setItem("uds_user", JSON.stringify(data.user || {}));
+    currentUser = data.user || {};
+  }
+  updateAuthUI();
+}
+function getAccessToken(){return localStorage.getItem("uds_access_token") || ""}
+function secureHeaders(extra={}){
+  return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+getAccessToken(),"Content-Type":"application/json",...extra}
+}
+function updateAuthUI(){
+  const token = getAccessToken();
+  const user = JSON.parse(localStorage.getItem("uds_user") || "{}");
+  currentUser = user;
+  if(token){
+    authScreen.classList.add("hidden");
+    currentUserEmail.textContent = user.email || "Signed in";
+  }else{
+    authScreen.classList.remove("hidden");
+    currentUserEmail.textContent = "Not signed in";
+  }
+}
+async function loginUser(){
+  authMessage.textContent = "Logging in...";
+  try{
+    const data = await supabaseAuthRequest("token?grant_type=password", {email:loginEmail.value.trim(), password:loginPassword.value});
+    setSession(data);
+    authMessage.textContent = "";
+    renderAll();
+  }catch(e){authMessage.textContent = e.message}
+}
+async function signupUser(){
+  authMessage.textContent = "Creating user...";
+  try{
+    await supabaseAuthRequest("signup", {email:loginEmail.value.trim(), password:loginPassword.value});
+    authMessage.textContent = "User created. Check email if confirmation is enabled, then login.";
+  }catch(e){authMessage.textContent = e.message}
+}
+function logoutUser(){
+  localStorage.removeItem("uds_access_token");
+  localStorage.removeItem("uds_refresh_token");
+  localStorage.removeItem("uds_user");
+  currentUser = null;
+  updateAuthUI();
+}
+
 let entries=JSON.parse(localStorage.getItem("uds_pro_entries")||localStorage.getItem("uds_v2_entries")||"[]");
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=8.0")};
+window.onload=()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);updateAuthUI();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=9.0")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="gallery")renderGallery();if(id==="map")renderMineMap();window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
-function headers(extra={}){return{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
+function headers(extra={}){return getAccessToken()?secureHeaders(extra):{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
 function checkSupabase(){syncStatus.textContent=supabaseReady()?"v6 Enterprise • online sync configured":"v6 Enterprise • offline mode only";supabaseStatus.textContent=supabaseReady()?`Connected: ${SUPABASE_URL}`:"Not connected. Add publishable/anon key to config.js."}
 function fileToData(file){return new Promise((res,rej)=>{let r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(file)})}
 function dataUrlToBlob(d){let a=d.split(","),m=a[0].match(/:(.*?);/)[1],b=atob(a[1]),n=b.length,u8=new Uint8Array(n);while(n--)u8[n]=b.charCodeAt(n);return new Blob([u8],{type:m})}
@@ -179,11 +241,11 @@ async function saveEntry(){let e=buildEntry();if(!e.heading||!e.job){alert("Add 
 function saveAction(){let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro v6"};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:headers({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro v9",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:headers({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:headers(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
-async function syncAction(a){let body={heading:a.heading,priority:a.priority,action_text:a.actionText,owner:a.owner,due_date:a.dueDate||null,status:a.status};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_actions`,{method:"POST",headers:headers({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());a.cloud_id=(await r.json())[0].id;a.synced=true}
+async function syncAction(a){let body={heading:a.heading,priority:a.priority,action_text:a.actionText,owner:a.owner,due_date:a.dueDate||null,status:a.status,created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_actions`,{method:"POST",headers:headers({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());a.cloud_id=(await r.json())[0].id;a.synced=true}
 async function loadCloudCount(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}try{let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries?select=id`,{headers:headers()});if(!r.ok)throw new Error(await r.text());alert(`Cloud has ${(await r.json()).length} development entries.`)}catch(e){alert("Could not check cloud: "+e.message)}}
 
 async function callAI(task,payload){if(!supabaseReady()){alert("Supabase key is not configured.");return}aiOutput.textContent="Working...";try{let r=await fetch(`${SUPABASE_URL}/functions/v1/${AI_FUNCTION_NAME}`,{method:"POST",headers:headers(),body:JSON.stringify({task,payload})});let data=await r.json();aiStatus.textContent="AI function working.";aiOutput.textContent=data.result||JSON.stringify(data,null,2)}catch(e){aiStatus.textContent="AI error.";aiOutput.textContent="AI error: "+e.message}}

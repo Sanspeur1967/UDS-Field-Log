@@ -54,3 +54,15 @@ button.secondary{background:#475569}button.success{background:#16a34a}button.dan
 .markup-tools button{
   min-width:86px;
 }
+
+/* v9 multi-user login */
+.auth-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0b1220,#172554);z-index:20000;display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-screen.hidden{display:none}
+.auth-card{width:100%;max-width:420px;background:white;border-radius:22px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.auth-card h1{margin:0;font-size:28px}
+.auth-card p{color:#64748b}
+.auth-card button{width:100%}
+.auth-message{font-weight:800;color:#dc2626!important}
+.header-actions{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+#currentUserEmail{font-size:11px;color:#cbd5e1;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.header-logout{background:#475569;margin:0;padding:8px 10px;border-radius:999px;font-size:12px}

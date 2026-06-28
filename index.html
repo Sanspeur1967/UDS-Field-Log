@@ -6,17 +6,33 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro v8 Photo Editor Pro</title>
+<title>UDS Development Pro v9 Multi-User</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=8.0">
+<link rel="stylesheet" href="style.css?v=9.0">
 </head>
 <body>
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <h1>UDS Development Pro</h1>
+    <p>Secure multi-user login</p>
+    <label>Email<input id="loginEmail" type="email" placeholder="name@company.com"></label>
+    <label>Password<input id="loginPassword" type="password" placeholder="Password"></label>
+    <button type="button" onclick="loginUser()">Login</button>
+    <button type="button" class="secondary" onclick="signupUser()">Create User</button>
+    <p id="authMessage" class="auth-message"></p>
+    <p class="hint">Production setup should use approved users only.</p>
+  </div>
+</div>
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">v8 Enterprise • rotate + resize markup</p>
+    <p id="syncStatus">v9 Enterprise • secure multi-user login</p>
   </div>
-  <button class="header-sync" onclick="syncAll()">Sync</button>
+  <div class="header-actions">
+    <span id="currentUserEmail">Not signed in</span>
+    <button class="header-sync" onclick="syncAll()">Sync</button>
+    <button class="header-logout" onclick="logoutUser()">Logout</button>
+  </div>
 </header>
 
 <nav class="top-nav">
@@ -233,7 +249,7 @@
   <p class="markup-help">Tap to add. Tap/drag to move. Use rotate/size buttons for selected object.</p>
 </div>
 
-<script src="config.js?v=8.0"></script>
-<script src="app.js?v=8.0"></script>
+<script src="config.js?v=9.0"></script>
+<script src="app.js?v=9.0"></script>
 </body>
 </html>
