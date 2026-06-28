@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro Enterprise 3.3</title>
+<title>UDS Development Pro Enterprise 3.4</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=3.3">
+<link rel="stylesheet" href="style.css?v=3.4">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -41,7 +41,7 @@
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">Enterprise 3.3 • role scope buttons</p>
+    <p id="syncStatus">Enterprise 3.4 • entries register</p>
   </div>
   <div class="header-actions">
     <span id="currentUserEmail">Not signed in</span>
@@ -159,6 +159,53 @@
   </div>
 </section>
 
+
+
+<section id="entriesRegister" class="tab">
+  <div class="section-title">
+    <h2>Entries Register</h2>
+    <p>View all development entries and open complete reports with photos</p>
+  </div>
+
+  <div class="form-card">
+    <div class="form-grid">
+      <label>Search
+        <input id="entrySearch" placeholder="Search heading, activity, notes..." oninput="renderEntriesRegister()">
+      </label>
+      <label>Shift
+        <select id="entryShiftFilter" onchange="renderEntriesRegister()">
+          <option value="">All Shifts</option>
+          <option>DS</option>
+          <option>NS</option>
+        </select>
+      </label>
+      <label>Date From
+        <input id="entryDateFrom" type="date" onchange="renderEntriesRegister()">
+      </label>
+      <label>Date To
+        <input id="entryDateTo" type="date" onchange="renderEntriesRegister()">
+      </label>
+    </div>
+    <div class="quick">
+      <button type="button" onclick="renderEntriesRegister()">Refresh</button>
+      <button type="button" class="secondary" onclick="clearEntryFilters()">Clear Filters</button>
+    </div>
+  </div>
+
+  <div id="entriesRegisterList"></div>
+</section>
+
+<section id="entryReportView" class="tab">
+  <div class="section-title">
+    <h2>Entry Report</h2>
+    <p>Complete report with field notes, actions and photos</p>
+  </div>
+  <div class="quick">
+    <button type="button" onclick="showTab('entriesRegister')">Back to Entries</button>
+    <button type="button" class="secondary" onclick="printEntryReport()">Print / PDF</button>
+  </div>
+  <div id="entryReportContent"></div>
+</section>
 
 <section id="forms" class="tab">
   <div class="section-title">
@@ -348,7 +395,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=3.3"></script>
-<script src="app.js?v=3.3"></script>
+<script src="config.js?v=3.4"></script>
+<script src="app.js?v=3.4"></script>
 </body>
 </html>

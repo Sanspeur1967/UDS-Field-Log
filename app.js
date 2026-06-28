@@ -182,7 +182,7 @@ let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.get
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
 window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=3.2")};
-function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="forms"){renderSelectedForm();renderSavedForms();}if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
+function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="entriesRegister")renderEntriesRegister();if(id==="forms"){renderSelectedForm();renderSavedForms();}if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
 function checkSupabase(){syncStatus.textContent=supabaseReady()?"v6 Enterprise • online sync configured":"v6 Enterprise • offline mode only";supabaseStatus.textContent=supabaseReady()?`Connected: ${SUPABASE_URL}`:"Not connected. Add publishable/anon key to config.js."}
@@ -1461,4 +1461,279 @@ function renderAll(){
   if(typeof renderSavedForms === "function") renderSavedForms();
   if(typeof renderDashboard === "function") renderDashboard();
   if(typeof renderActions === "function") renderActions();
+}
+
+
+
+/* Enterprise 3.4 Entries Register + Full Report View */
+function getAllEntriesForRole(){
+  // Local-first for now. Higher roles see all local entries; supervisors see their own when created_by exists.
+  const role = getRoleName ? getRoleName() : "Supervisor";
+  if(["Admin","Manager","Superintendent"].includes(role)) return entries || [];
+  const email = currentUser?.email || "";
+  return (entries || []).filter(e => !e.created_by_email || e.created_by_email === email || !email);
+}
+
+function roleAction(action){
+  if(action==="entry"){showTab("entry");return;}
+  if(action==="forms"){showTab("forms");return;}
+  if(action==="gallery"){showTab("gallery");return;}
+  if(action==="map"){showTab("map");return;}
+  if(action==="ai"){showTab("ai");return;}
+  if(action==="report"){showTab("report");return;}
+  if(action==="actions"){showTab("actions");return;}
+  if(action==="admin"){showTab("admin");return;}
+  if(action==="entries" || action==="allEntries" || action==="dashboard"){
+    showTab("entriesRegister");
+    renderEntriesRegister();
+    return;
+  }
+  if(action==="installer"){showTab("admin");setTimeout(()=>checkInstallerStatus && checkInstallerStatus(),150);return;}
+}
+
+function scopeAction(label){
+  const key = String(label || "").toLowerCase();
+  if(key.includes("form")){ showTab("forms"); return; }
+  if(key.includes("photo")){ showTab("gallery"); return; }
+  if(key.includes("action")){ showTab("actions"); return; }
+  if(key.includes("user") || key.includes("role") || key.includes("database") || key.includes("admin") || key.includes("system")){ showTab("admin"); return; }
+  if(key.includes("trend") || key.includes("executive") || key.includes("ai")){ showTab("ai"); return; }
+  if(key.includes("entry") || key.includes("entries") || key.includes("production") || key.includes("record")){ 
+    showTab("entriesRegister"); 
+    renderEntriesRegister();
+    return; 
+  }
+  showTab("entriesRegister");
+  renderEntriesRegister();
+}
+
+function renderEntriesRegister(){
+  const el = document.getElementById("entriesRegisterList");
+  if(!el) return;
+
+  const q = (document.getElementById("entrySearch")?.value || "").toLowerCase();
+  const shift = document.getElementById("entryShiftFilter")?.value || "";
+  const from = document.getElementById("entryDateFrom")?.value || "";
+  const to = document.getElementById("entryDateTo")?.value || "";
+
+  let list = getAllEntriesForRole().slice().sort((a,b)=>{
+    const ad = (a.date || a.entry_date || "") + " " + (a.time || a.entry_time || "");
+    const bd = (b.date || b.entry_date || "") + " " + (b.time || b.entry_time || "");
+    return bd.localeCompare(ad);
+  });
+
+  list = list.filter(e => {
+    const date = e.date || e.entry_date || "";
+    const text = JSON.stringify(e).toLowerCase();
+    if(q && !text.includes(q)) return false;
+    if(shift && (e.shift || "") !== shift) return false;
+    if(from && date < from) return false;
+    if(to && date > to) return false;
+    return true;
+  });
+
+  el.innerHTML = list.length ? list.map((e,idx) => {
+    const id = e.id || e.local_id || e.created_at || idx;
+    const photos = getEntryPhotos(e).length;
+    return `
+      <div class="entry-card">
+        <h3>${esc(e.heading || e.heading_drive || "No Heading")}</h3>
+        <div class="entry-meta">
+          <span class="entry-pill">${esc(e.date || e.entry_date || "")}</span>
+          <span class="entry-pill">${esc(e.time || e.entry_time || "")}</span>
+          <span class="entry-pill">${esc(e.shift || "")}</span>
+          <span class="entry-pill">${esc(e.activity || e.job || "")}</span>
+          <span class="entry-pill">${photos} photo${photos===1?"":"s"}</span>
+        </div>
+        <p>${esc((e.notes || e.generalNotes || e.next_shift || "").slice(0,180))}</p>
+        <button type="button" onclick="openEntryReport('${escAttr(String(id))}')">Open Full Report</button>
+      </div>
+    `;
+  }).join("") : "<div class='notice'>No entries found.</div>";
+}
+
+function clearEntryFilters(){
+  ["entrySearch","entryShiftFilter","entryDateFrom","entryDateTo"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value="";
+  });
+  renderEntriesRegister();
+}
+
+function findEntryById(id){
+  return (entries || []).find((e,idx) => String(e.id || e.local_id || e.created_at || idx) === String(id));
+}
+
+function getEntryPhotos(entry){
+  if(!entry) return [];
+  if(Array.isArray(entry.photos)) return entry.photos;
+  if(Array.isArray(entry.photo_urls)) return entry.photo_urls.map(u=>({data:u,url:u}));
+  if(Array.isArray(entry.photoUrls)) return entry.photoUrls.map(u=>({data:u,url:u}));
+  if(entry.photo_url) return [{data:entry.photo_url,url:entry.photo_url}];
+  return [];
+}
+
+function openEntryReport(id){
+  const entry = findEntryById(id);
+  if(!entry){
+    alert("Entry not found.");
+    return;
+  }
+  showTab("entryReportView");
+  renderEntryReport(entry);
+}
+
+function renderEntryReport(e){
+  const el = document.getElementById("entryReportContent");
+  if(!el) return;
+
+  const photos = getEntryPhotos(e);
+  const safety = [
+    ["PTHA", e.ptha],
+    ["LIF", e.lif],
+    ["Scaling Complete", e.scaled || e.scaling],
+    ["Ground Support Complete", e.ground_support || e.groundSupport],
+    ["Bolt Pattern Verified", e.bolt_pattern || e.boltPattern],
+    ["Shotcrete Quality Checked", e.shotcrete_quality || e.shotcreteQuality],
+    ["Ventilation Adequate", e.ventilation],
+    ["Services Clear", e.services_clear || e.servicesClear],
+    ["Barricades / Controls", e.barricades],
+    ["Re-entry Confirmed", e.reentry || e.re_entry]
+  ];
+
+  el.innerHTML = `
+    <div class="entry-report" id="printableEntryReport">
+      <h2>${esc(e.heading || e.heading_drive || "Development Entry")}</h2>
+      <p><b>Date:</b> ${esc(e.date || e.entry_date || "")} &nbsp; <b>Time:</b> ${esc(e.time || e.entry_time || "")} &nbsp; <b>Shift:</b> ${esc(e.shift || "")}</p>
+
+      <table class="report-table">
+        <tr><th>Level / Area</th><td>${esc(e.level_area || e.area || "")}</td></tr>
+        <tr><th>Activity / Job</th><td>${esc(e.activity || e.job || "")}</td></tr>
+        <tr><th>Round / Chainage</th><td>${esc(e.round_chainage || e.chainage || "")}</td></tr>
+        <tr><th>Metres Advanced</th><td>${esc(e.metres_advanced || e.metres || 0)}</td></tr>
+        <tr><th>Bolts Installed</th><td>${esc(e.bolts_installed || e.bolts || 0)}</td></tr>
+        <tr><th>Mesh Installed</th><td>${esc(e.mesh_installed || e.mesh || "")}</td></tr>
+        <tr><th>Shotcrete m³</th><td>${esc(e.shotcrete_m3 || e.shotcrete || 0)}</td></tr>
+        <tr><th>Equipment</th><td>${esc(e.equipment || "")}</td></tr>
+        <tr><th>Ground Conditions</th><td>${esc(e.ground_condition || e.groundCondition || "")}</td></tr>
+        <tr><th>Delays</th><td>${esc(e.delays || "")}</td></tr>
+        <tr><th>Next Shift Plan</th><td>${esc(e.next_shift || e.nextShift || "")}</td></tr>
+        <tr><th>General Notes</th><td>${esc(e.notes || e.generalNotes || "")}</td></tr>
+        <tr><th>Created By</th><td>${esc(e.created_by_email || e.created_by || "")}</td></tr>
+      </table>
+
+      <h3>Safety / Quality Checks</h3>
+      <table class="report-table">
+        ${safety.map(([k,v])=>`<tr><th>${esc(k)}</th><td>${v ? "Yes" : "No"}</td></tr>`).join("")}
+      </table>
+
+      <h3>Photos</h3>
+      <div class="photo-grid">
+        ${photos.length ? photos.map((p,i)=>{
+          const src = p.data || p.url || p;
+          return `<div><img src="${src}" alt="Entry photo ${i+1}"><p>Photo ${i+1}</p></div>`;
+        }).join("") : "<p>No photos attached.</p>"}
+      </div>
+    </div>
+  `;
+}
+
+function printEntryReport(){
+  const report = document.getElementById("printableEntryReport");
+  if(!report){
+    alert("Open an entry report first.");
+    return;
+  }
+  const win = window.open("", "_blank");
+  if(!win){
+    alert("Popup blocked. Allow popups for this site.");
+    return;
+  }
+  win.document.write(`<!DOCTYPE html><html><head><title>Entry Report</title>
+    <style>
+      body{font-family:Arial,sans-serif;margin:20px;color:#172033}
+      table{width:100%;border-collapse:collapse;margin:12px 0}
+      th,td{border:1px solid #94a3b8;padding:8px;text-align:left;vertical-align:top}
+      th{background:#e5e7eb;width:32%}
+      img{max-width:48%;margin:6px;border:1px solid #ccc}
+      @media print{@page{size:A4 portrait;margin:10mm}}
+    </style></head><body>${report.outerHTML}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>win.print(),500);
+}
+
+/* Override role cards so All Entries opens the real register */
+function applyRoleView(){
+  const role = getRoleName();
+  const actual = getActualRoleName ? getActualRoleName() : (currentUserRole?.role || "Supervisor");
+  const isPreview = typeof isActualAdmin === "function" && isActualAdmin() && !!previewRole;
+
+  const title = document.getElementById("roleDashboardTitle");
+  const subtitle = document.getElementById("roleDashboardSubtitle");
+  const panel = document.getElementById("roleViewPanel");
+  const scope = document.getElementById("roleScopePanel");
+  if(!title || !panel) return;
+
+  const config = {
+    Supervisor:{
+      title:"Supervisor Dashboard",
+      subtitle:"My shift entries, my forms, my photos, actions and AI handover.",
+      actions:[["Development Entry","entry"],["My Entries","entries"],["Complete Forms","forms"],["My Actions","actions"],["My Photos","gallery"],["AI Assistant","ai"]],
+      scope:[["Own Entries","entries"],["Own Forms","forms"],["Own Photos","gallery"],["Own Actions","actions"]]
+    },
+    Superintendent:{
+      title:"Superintendent Dashboard",
+      subtitle:"Area-level review of supervisors, headings, forms, delays and actions.",
+      actions:[["Area Entries","entries"],["Forms Review","forms"],["Heading History","map"],["Open Actions","actions"],["AI Daily Summary","ai"]],
+      scope:[["Area Entries","entries"],["Supervisor Forms","forms"],["Area Photos","gallery"],["KPI / Delays","dashboard"]]
+    },
+    Manager:{
+      title:"Manager Dashboard",
+      subtitle:"Department-wide production, safety, forms, action and AI trend review.",
+      actions:[["All Entries","entries"],["All Forms","forms"],["All Actions","actions"],["All Photos","gallery"],["AI Executive Summary","ai"],["Reports","report"]],
+      scope:[["All Entries","entries"],["All Forms","forms"],["All Photos","gallery"],["Executive Trends","ai"]]
+    },
+    Admin:{
+      title:"Admin Dashboard",
+      subtitle:"System administration, users, roles, database health, installer status and all records.",
+      actions:[["User Management","admin"],["All Entries","entries"],["All Forms","forms"],["All Actions","actions"],["All Photos","gallery"],["System Installation Status","installer"]],
+      scope:[["Users / Roles","admin"],["Database Health","admin"],["All Records","entries"],["Developer View-As","dashboard"]]
+    }
+  };
+
+  const cfg = config[role] || config.Supervisor;
+  title.textContent = cfg.title;
+  subtitle.textContent = cfg.subtitle;
+
+  panel.innerHTML = `
+    <div class="role-banner">
+      <h3>${esc(role)} View${isPreview ? " (Preview)" : ""}</h3>
+      <p>${esc(cfg.subtitle)}</p>
+      ${isPreview ? `<p><b>Actual Login:</b> ${esc(actual)} — previewing ${esc(role)}</p>` : ""}
+      <div class="role-list">
+        ${cfg.actions.map(a=>`<button type="button" class="role-action-btn" onclick="roleAction('${a[1]}')">${esc(a[0])}</button>`).join("")}
+      </div>
+    </div>`;
+
+  if(scope){
+    scope.innerHTML = `
+      <div class="scope-grid">
+        ${cfg.scope.map(s=>`
+          <button type="button" class="scope-card-btn" onclick="roleAction('${s[1]}')">
+            <b>${esc(s[0])}</b>
+            <span>${esc(role)} access</span>
+          </button>
+        `).join("")}
+      </div>
+      <p>
+        <button type="button" class="role-permission-tag" onclick="roleAction('forms')">Create Forms</button>
+        <button type="button" class="role-permission-tag ${canViewCrew && canViewCrew()?'':'blocked'}" onclick="roleAction('entries')">Crew / Area View</button>
+        <button type="button" class="role-permission-tag ${canViewAll && canViewAll()?'':'blocked'}" onclick="roleAction('entries')">All Records</button>
+        <button type="button" class="role-permission-tag ${canAdmin && canAdmin()?'':'blocked'}" onclick="roleAction('admin')">Admin Tools</button>
+      </p>`;
+  }
+
+  const adminBtn = document.getElementById("adminNavButton");
+  if(adminBtn) adminBtn.style.display = (typeof isActualAdmin === "function" && isActualAdmin()) ? "block" : "none";
 }
