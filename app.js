@@ -6,23 +6,39 @@ let supabaseClient = null;
 function initSupabase(){
   if(!window.supabase){
     console.error("Supabase JS library did not load.");
-    return;
+    return false;
   }
-  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if(!SUPABASE_URL || !SUPABASE_ANON_KEY){
+    console.error("Missing Supabase URL or anon key.");
+    return false;
+  }
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storage: window.localStorage
+    }
+  });
+  return true;
 }
 
 async function initAuth(){
-  initSupabase();
-  if(!supabaseClient){
-    authMessage.textContent = "Supabase library not loaded. Check internet connection.";
+  loadRememberedEmail();
+
+  if(!initSupabase()){
+    const msg = "Supabase library/key not loaded. Check config.js and internet.";
+    if(typeof authMessage !== "undefined") authMessage.textContent = msg;
     return;
   }
 
-  const { data } = await supabaseClient.auth.getSession();
-  currentUser = data?.session?.user || null;
-  updateAuthUI();
+  const { data, error } = await supabaseClient.auth.getSession();
+  if(error) console.warn(error.message);
 
-  supabaseClient.auth.onAuthStateChange((_event, session) => {
+  currentUser = data?.session?.user || null;
+  await updateAuthUI();
+
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     currentUser = session?.user || null;
     await updateAuthUI();
     renderAll();
@@ -30,45 +46,70 @@ async function initAuth(){
 }
 
 async function updateAuthUI(){
+  const screen = document.getElementById("authScreen");
+  const userLabel = document.getElementById("currentUserEmail");
+
   if(currentUser){
-    authScreen.classList.add("hidden");
-    currentUserEmail.textContent = currentUser.email || "Signed in";
+    if(screen) screen.classList.add("hidden");
+    if(userLabel) userLabel.textContent = currentUser.email || "Signed in";
     await loadCurrentUserRole();
   }else{
-    authScreen.classList.remove("hidden");
-    currentUserEmail.textContent = "Not signed in";
+    if(screen) screen.classList.remove("hidden");
+    if(userLabel) userLabel.textContent = "Not signed in";
     currentUserRole = null;
   }
   updateAdminVisibility();
 }
 
 async function loginUser(){
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value;
+
+  if(!email || !password){
+    authMessage.textContent = "Enter email and password.";
+    return;
+  }
+
   authMessage.textContent = "Logging in...";
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email: loginEmail.value.trim(),
-    password: loginPassword.value
-  });
+
+  if(!supabaseClient && !initSupabase()){
+    authMessage.textContent = "Supabase is not loaded. Refresh and try again.";
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
   if(error){
     authMessage.textContent = error.message;
     return;
   }
+
   currentUser = data.user;
   saveRememberedEmail();
   authMessage.textContent = "";
-  updateAuthUI();
+  await updateAuthUI();
+  renderAll();
 }
 
 async function signupUser(){
-  authMessage.textContent = "Creating user...";
-  const { error } = await supabaseClient.auth.signUp({
-    email: loginEmail.value.trim(),
-    password: loginPassword.value
-  });
-  if(error){
-    authMessage.textContent = error.message;
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value;
+
+  if(!email || !password){
+    authMessage.textContent = "Enter email and password.";
     return;
   }
-  authMessage.textContent = "User created. Confirm email if required, then login.";
+
+  authMessage.textContent = "Creating user...";
+
+  if(!supabaseClient && !initSupabase()){
+    authMessage.textContent = "Supabase is not loaded. Refresh and try again.";
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.signUp({ email, password });
+
+  authMessage.textContent = error ? error.message : "User created. Confirm email if required, then login.";
 }
 
 async function resetPassword(){
@@ -77,14 +118,20 @@ async function resetPassword(){
     authMessage.textContent = "Enter your email first.";
     return;
   }
+
+  if(!supabaseClient && !initSupabase()){
+    authMessage.textContent = "Supabase is not loaded. Refresh and try again.";
+    return;
+  }
+
   const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
   authMessage.textContent = error ? error.message : "Password reset email sent.";
 }
 
 async function logoutUser(){
-  await supabaseClient.auth.signOut();
+  if(supabaseClient) await supabaseClient.auth.signOut();
   currentUser = null;
-  updateAuthUI();
+  await updateAuthUI();
 }
 
 async function getAuthHeaders(extra={}){
@@ -99,11 +146,40 @@ async function getAuthHeaders(extra={}){
   };
 }
 
+function togglePassword(){
+  const input = document.getElementById("loginPassword");
+  const btn = document.getElementById("showPasswordBtn") || document.querySelector(".show-pass-btn");
+  if(!input) return;
+  if(input.type === "password"){
+    input.type = "text";
+    if(btn) btn.textContent = "Hide";
+  }else{
+    input.type = "password";
+    if(btn) btn.textContent = "Show";
+  }
+}
+
+function saveRememberedEmail(){
+  const remember = document.getElementById("rememberMe");
+  const email = document.getElementById("loginEmail");
+  if(remember?.checked && email?.value){
+    localStorage.setItem("uds_remember_email", email.value.trim());
+  }else{
+    localStorage.removeItem("uds_remember_email");
+  }
+}
+
+function loadRememberedEmail(){
+  const remembered = localStorage.getItem("uds_remember_email") || "";
+  const email = document.getElementById("loginEmail");
+  if(email && remembered) email.value = remembered;
+}
+
 let entries=JSON.parse(localStorage.getItem("uds_pro_entries")||localStorage.getItem("uds_v2_entries")||"[]");
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadRememberedEmail();await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=1.2")};
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=1.3")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
@@ -280,7 +356,7 @@ async function saveEntry(){let e=buildEntry();if(!e.heading||!e.job){alert("Add 
 function saveAction(){let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 1.2",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 1.3",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
@@ -305,7 +381,7 @@ async function loadCurrentUserRole(){
     if(error) throw error;
     currentUserRole = data || null;
     if(currentUserRole){
-      currentUserEmail.innerHTML = `<span class="header-user-pill">🟢 ${currentUserRole.full_name || currentUser.email} • ${currentUserRole.role}</span>`;
+      currentUserEmail.textContent = `🟢 ${currentUserRole.full_name || currentUser.email} • ${currentUserRole.role}`;
     }
   }catch(e){
     console.warn("Role lookup failed:", e.message);

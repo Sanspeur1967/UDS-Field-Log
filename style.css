@@ -219,3 +219,16 @@ button.secondary{background:#475569}button.success{background:#16a34a}button.dan
   font-size:11px;
   max-width:180px;
 }
+
+/* Enterprise 1.3 login fix */
+.show-pass-btn{
+  flex:0 0 82px;
+  display:block !important;
+  pointer-events:auto !important;
+}
+.password-wrap{
+  align-items:stretch;
+}
+.password-wrap input{
+  margin-top:5px;
+}
