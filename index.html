@@ -6,31 +6,42 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro Enterprise 1.1</title>
+<title>UDS Development Pro Enterprise 1.2</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=1.1">
+<link rel="stylesheet" href="style.css?v=1.2">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
   <div class="auth-card">
+    <div class="auth-logo">UDS</div>
     <h1>UDS Development Pro</h1>
     <p>Enterprise secure login</p>
 
     <label>Email<input id="loginEmail" type="email" autocomplete="email" placeholder="name@company.com"></label>
-    <label>Password<input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password"></label>
+    <label>Password
+      <div class="password-wrap">
+        <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password">
+        <button type="button" class="show-pass-btn" onclick="togglePassword()">Show</button>
+      </div>
+    </label>
+
+    <label class="login-check">
+      <input id="rememberMe" type="checkbox" checked>
+      <span>Remember me on this device</span>
+    </label>
 
     <button type="button" onclick="loginUser()">Login</button>
     <button type="button" class="secondary" onclick="signupUser()">Create User</button>
-    <button type="button" class="secondary" onclick="resetPassword()">Reset Password</button>
+    <button type="button" class="link-btn" onclick="resetPassword()">Forgot / Reset Password</button>
 
     <p id="authMessage" class="auth-message"></p>
-    <p class="hint">Admin users should be created/approved in Supabase Authentication.</p>
+    <p class="login-version">Enterprise 1.2</p>
   </div>
 </div>
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">Enterprise 1.1 • admin console</p>
+    <p id="syncStatus">Enterprise 1.2 • polished login</p>
   </div>
   <div class="header-actions">
     <span id="currentUserEmail">Not signed in</span>
@@ -295,7 +306,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=1.1"></script>
-<script src="app.js?v=1.1"></script>
+<script src="config.js?v=1.2"></script>
+<script src="app.js?v=1.2"></script>
 </body>
 </html>
