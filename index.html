@@ -6,15 +6,15 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro v7 Photo Editor</title>
+<title>UDS Development Pro v8 Photo Editor Pro</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=7.0">
+<link rel="stylesheet" href="style.css?v=8.0">
 </head>
 <body>
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">v7 Enterprise • photo editor + checkbox fix</p>
+    <p id="syncStatus">v8 Enterprise • rotate + resize markup</p>
   </div>
   <button class="header-sync" onclick="syncAll()">Sync</button>
 </header>
@@ -222,13 +222,18 @@
     <button onclick="setMarkupTool('rect')">Box</button>
     <button onclick="setMarkupTool('arrow')">Arrow</button>
     <button onclick="setMarkupTool('text')">Text</button>
+    <button onclick="rotateSelected(-15)" class="secondary">↶ Rotate</button>
+    <button onclick="rotateSelected(15)" class="secondary">↷ Rotate</button>
+    <button onclick="resizeSelected(1.15)" class="secondary">+ Size</button>
+    <button onclick="resizeSelected(0.85)" class="secondary">- Size</button>
+    <button onclick="duplicateSelected()" class="secondary">Duplicate</button>
     <button onclick="deleteSelectedMarkup()" class="danger">Delete</button>
     <button onclick="saveMarkup()" class="success">Save</button>
   </div>
-  <p class="markup-help">Tap to add. Tap/drag an item to move it before saving.</p>
+  <p class="markup-help">Tap to add. Tap/drag to move. Use rotate/size buttons for selected object.</p>
 </div>
 
-<script src="config.js?v=7.0"></script>
-<script src="app.js?v=7.0"></script>
+<script src="config.js?v=8.0"></script>
+<script src="app.js?v=8.0"></script>
 </body>
 </html>

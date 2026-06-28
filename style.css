@@ -45,3 +45,12 @@ button.secondary{background:#475569}button.success{background:#16a34a}button.dan
 #markupCanvas{background:white;border-radius:12px;max-width:100%;touch-action:none;cursor:crosshair}
 .markup-help{color:white;font-weight:800;text-align:center;margin:8px 0 0}
 .markup-tools button{margin:4px;padding:10px 12px}
+
+/* v8 Photo Editor Pro */
+.markup-tools{
+  max-height:24vh;
+  overflow:auto;
+}
+.markup-tools button{
+  min-width:86px;
+}
