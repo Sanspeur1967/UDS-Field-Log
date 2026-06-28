@@ -1,10 +1,10 @@
 {
   "name": "UDS Development Pro Enterprise",
   "short_name": "UDS Pro",
-  "start_url": "./index.html?enterprise=2.2",
+  "start_url": "./index.html?enterprise=2.3",
   "display": "standalone",
   "background_color": "#edf2f7",
   "theme_color": "#0b1220",
-  "description": "UDS Development Pro Enterprise 2.2 Developer Role Preview.",
+  "description": "UDS Development Pro Enterprise 2.3 Forms Centre.",
   "icons": []
 }

@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro Enterprise 2.2</title>
+<title>UDS Development Pro Enterprise 2.3</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=2.2">
+<link rel="stylesheet" href="style.css?v=2.3">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -41,7 +41,7 @@
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">Enterprise 2.2 • role preview</p>
+    <p id="syncStatus">Enterprise 2.3 • forms centre</p>
   </div>
   <div class="header-actions">
     <span id="currentUserEmail">Not signed in</span>
@@ -53,7 +53,7 @@
 <nav class="top-nav">
   <button data-tab="dashboard" class="active">Home</button>
   <button data-tab="entry">Entry</button>
-  <button data-tab="gallery">Gallery</button>
+  <button data-tab="forms">Forms</button>
   <button data-tab="map">Map</button>
   <button data-tab="ai">AI</button>
   <button data-tab="more">More</button>
@@ -156,6 +156,37 @@
 
     <button type="button" class="save-btn" onclick="saveEntry()">Save Entry</button>
   </div>
+</section>
+
+
+<section id="forms" class="tab">
+  <div class="section-title">
+    <h2>Forms Centre</h2>
+    <p>Fillable Dayan documents, coaching records and observations</p>
+  </div>
+
+  <div class="form-card">
+    <label>Document Type
+      <select id="formType" onchange="renderSelectedForm()">
+        <option value="pjo">Planned Job Observation</option>
+        <option value="cascaded">Cascaded Coaching</option>
+        <option value="lif">Leaders in Field</option>
+        <option value="custom">Custom Field Form</option>
+      </select>
+    </label>
+
+    <div class="quick">
+      <button type="button" onclick="newForm()">New Form</button>
+      <button type="button" class="secondary" onclick="renderSavedForms()">Saved Forms</button>
+      <button type="button" class="secondary" onclick="printCurrentForm()">Print / PDF</button>
+      <button type="button" class="ai" onclick="aiSummarizeForm()">AI Summary</button>
+    </div>
+  </div>
+
+  <div id="dynamicFormArea"></div>
+
+  <h3>Saved Forms</h3>
+  <div id="savedFormsList"></div>
 </section>
 
 <section id="gallery" class="tab">
@@ -314,7 +345,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=2.2"></script>
-<script src="app.js?v=2.2"></script>
+<script src="config.js?v=2.3"></script>
+<script src="app.js?v=2.3"></script>
 </body>
 </html>

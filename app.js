@@ -177,11 +177,12 @@ function loadRememberedEmail(){
 }
 
 let entries=JSON.parse(localStorage.getItem("uds_pro_entries")||localStorage.getItem("uds_v2_entries")||"[]");
+let savedForms=JSON.parse(localStorage.getItem("uds_enterprise_forms")||"[]");
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=2.2")};
-function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=2.3")};
+function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="forms"){renderSelectedForm();renderSavedForms();}if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
 function checkSupabase(){syncStatus.textContent=supabaseReady()?"v6 Enterprise • online sync configured":"v6 Enterprise • offline mode only";supabaseStatus.textContent=supabaseReady()?`Connected: ${SUPABASE_URL}`:"Not connected. Add publishable/anon key to config.js."}
@@ -357,7 +358,7 @@ async function saveEntry(){if(!canWrite()){alert("Viewer role is read-only.");re
 function saveAction(){if(!canWrite()){alert("Viewer role is read-only.");return;}let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 2.2",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 2.3",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
@@ -609,10 +610,8 @@ function roleAction(action){
     showTab("ai");
     return;
   }
-  if(action === "gallery"){
-    showTab("gallery");
-    return;
-  }
+  if(action === "gallery"){showTab("gallery");return;}
+  if(action === "forms"){showTab("forms");return;}
   if(action === "map"){
     showTab("map");
     return;
@@ -635,22 +634,22 @@ function applyRoleView(){
     Admin: {
       title:"Admin Dashboard",
       subtitle:"System control, users, production, actions and audit readiness",
-      items:[{label:"User roles and access",action:"users"},{label:"All production entries",action:"entries"},{label:"All actions",action:"actions"},{label:"System installation status",action:"installer"},{label:"Reports and AI tools",action:"reports"}]
+      items:[{label:"User roles and access",action:"users"},{label:"All production entries",action:"entries"},{label:"All actions",action:"actions"},{label:"System installation status",action:"installer"},{label:"Reports and AI tools",action:"reports"},{label:"Forms Centre",action:"forms"}]
     },
     Manager: {
       title:"Manager Dashboard",
       subtitle:"High-level production, delays, safety and team performance",
-      items:[{label:"All headings overview",action:"map"},{label:"Production trends",action:"dashboard"},{label:"Open actions",action:"actions"},{label:"Delay hotspots",action:"ai"},{label:"AI summaries",action:"ai"}]
+      items:[{label:"All headings overview",action:"map"},{label:"Production trends",action:"dashboard"},{label:"Open actions",action:"actions"},{label:"Delay hotspots",action:"ai"},{label:"AI summaries",action:"ai"},{label:"Forms Review",action:"forms"}]
     },
     Superintendent: {
       title:"Superintendent Dashboard",
       subtitle:"Shift execution, supervisors, headings, actions and handovers",
-      items:[{label:"Supervisor entries",action:"entries"},{label:"Heading history",action:"map"},{label:"Open actions",action:"actions"},{label:"Daily report",action:"reports"},{label:"AI handover",action:"ai"}]
+      items:[{label:"Supervisor entries",action:"entries"},{label:"Heading history",action:"map"},{label:"Open actions",action:"actions"},{label:"Daily report",action:"reports"},{label:"AI handover",action:"ai"},{label:"PJO / Coaching Forms",action:"forms"}]
     },
     Supervisor: {
       title:"Supervisor Dashboard",
       subtitle:"Create shift logs, photos, actions and next shift plan",
-      items:[{label:"Create entries",action:"entry"},{label:"Photo editor",action:"entry"},{label:"Own shift actions",action:"actions"},{label:"Daily report",action:"reports"},{label:"Voice notes",action:"entry"}]
+      items:[{label:"Create entries",action:"entry"},{label:"Photo editor",action:"entry"},{label:"Own shift actions",action:"actions"},{label:"Daily report",action:"reports"},{label:"Voice notes",action:"entry"},{label:"Complete Forms",action:"forms"}]
     },
     Viewer: {
       title:"Viewer Dashboard",
@@ -704,7 +703,276 @@ async function checkInstallerStatus(){
 }
 
 
-function renderAll(){applyRoleView();renderDevRolePreview();renderDashboard();renderActions();renderGallery();renderMineMap();checkSupabase()}
+
+function newForm(){
+  const d = new Date().toISOString().split("T")[0];
+  setTimeout(() => {
+    if(document.getElementById("formDate")) document.getElementById("formDate").value = d;
+    renderSelectedForm();
+  }, 20);
+}
+
+function renderSelectedForm(){
+  const type = document.getElementById("formType")?.value || "pjo";
+  if(type === "pjo") renderPJOForm();
+  else if(type === "cascaded") renderPlaceholderForm("Cascaded Coaching");
+  else if(type === "lif") renderPlaceholderForm("Leaders in Field");
+  else renderPlaceholderForm("Custom Field Form");
+}
+
+function renderPlaceholderForm(title){
+  dynamicFormArea.innerHTML = `
+    <div class="form-template">
+      <div class="form-header-dayan">
+        <div class="form-logo"><span>D</span>AYAN</div>
+        <div class="form-title"><h2>${esc(title)}</h2><p>Template ready to configure</p></div>
+      </div>
+      <div class="form-section">
+        <h3>${esc(title)}</h3>
+        <label>Date<input id="formDate" type="date"></label>
+        <label>Area / Heading<input id="formHeading" placeholder="EXL XD44 DN31"></label>
+        <label>Coach / Observer<input id="formCoach"></label>
+        <label>Employee / Crew<input id="formEmployee"></label>
+        <label>Notes<textarea id="formNotes"></textarea></label>
+      </div>
+      <button type="button" class="save-btn" onclick="saveFillableForm()">Save ${esc(title)}</button>
+    </div>
+  `;
+}
+
+function yn(name){
+  return `
+    <div class="yes-no">
+      <label class="form-check"><input type="radio" name="${name}" value="Yes"> Yes / Тийм</label>
+      <label class="form-check"><input type="radio" name="${name}" value="No"> No / Үгүй</label>
+    </div>
+  `;
+}
+
+function renderPJOForm(){
+  dynamicFormArea.innerHTML = `
+  <div class="form-template" id="currentFormPrintable">
+    <div class="form-header-dayan">
+      <div class="form-logo"><span>D</span>AYAN</div>
+      <div class="form-title">
+        <h2>PLANNED JOB OBSERVATION</h2>
+        <p>Ажлын төлөвлөгөөт ажиглалт</p>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Header Information</h3>
+      <div class="form-grid">
+        <label>Workplace / Ажлын байр<input id="pjo_workplace" placeholder="EXL XD44 DN31"></label>
+        <label>Date of Observation<input id="pjo_date" type="date"></label>
+        <label>Job / Task Observed<input id="pjo_task"></label>
+        <label>Procedure Name and #<input id="pjo_procedure"></label>
+        <label>Observer / Crew Trainer<input id="pjo_observer"></label>
+        <label>Supervisor<input id="pjo_supervisor"></label>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Reason for Observation</h3>
+      <div class="form-check-grid">
+        <label class="form-check"><input type="checkbox" id="pjo_reason_procedure"> Job Procedure / Practice Update</label>
+        <label class="form-check"><input type="checkbox" id="pjo_reason_injury"> Recent Injury Associated with Job/Task</label>
+        <label class="form-check"><input type="checkbox" id="pjo_reason_training"> Training Follow-up</label>
+        <label class="form-check"><input type="checkbox" id="pjo_reason_experienced"> Experienced Worker Check</label>
+        <label class="form-check"><input type="checkbox" id="pjo_reason_other"> Other</label>
+      </div>
+      <label>Other Reason<input id="pjo_reason_other_text"></label>
+    </div>
+
+    <div class="form-section">
+      <h3>Type of Observation</h3>
+      <div class="form-check-grid">
+        <label class="form-check"><input type="checkbox" id="pjo_type_performance"> Performance Demonstration</label>
+        <label class="form-check"><input type="checkbox" id="pjo_type_followup"> Follow-up</label>
+      </div>
+      <label>Original Date<input id="pjo_original_date" type="date"></label>
+    </div>
+
+    <div class="form-section">
+      <h3>Employee Information</h3>
+      <div class="form-grid">
+        <label>Employee #1 Name<input id="pjo_emp1_name"></label>
+        <label>Employee #1 Occupation<input id="pjo_emp1_occupation"></label>
+        <label>Employee #1 Experience<input id="pjo_emp1_experience"></label>
+        <label>Employee #2 Name<input id="pjo_emp2_name"></label>
+        <label>Employee #2 Occupation<input id="pjo_emp2_occupation"></label>
+        <label>Employee #2 Experience<input id="pjo_emp2_experience"></label>
+      </div>
+      <div class="form-question"><div class="form-question-title">Is worker trained and licensed?</div>${yn("pjo_trained")}</div>
+      <div class="form-question"><div class="form-question-title">Training records verified?</div>${yn("pjo_training_records")}</div>
+    </div>
+
+    <div class="form-section">
+      <h3>Observations / Ажиглалтууд</h3>
+      ${pjoQuestion(1, "Could any practices or conditions observed result in personal injury or near miss? If yes, explain.", "q1")}
+      ${pjoQuestion(2, "Could any practices or conditions observed result in property damage? If yes, explain.", "q2")}
+      ${pjoQuestion(3, "Were all applicable procedures/standards followed during the observation? If no, explain.", "q3")}
+      ${pjoQuestion(4, "What key points in the procedure/standard were noticed during the observation?", "q4", false)}
+      ${pjoQuestion(5, "Was any positive recognition given to the employee(s) following the observation? If yes, what was said?", "q5")}
+      ${pjoQuestion(6, "Was any corrective information and instruction given to the employee(s) during the observation? If yes, what was it?", "q6")}
+      ${pjoQuestion(7, "Do the methods and practices observed need to be reviewed for efficiency and production capability?", "q7")}
+      ${pjoQuestion(8, "What should we consider changing in the interest of safety? Ask employee(s) for their input.", "q8")}
+      ${pjoQuestion(9, "Additional comments / observations.", "q9", false)}
+      ${pjoQuestion(10, "Do procedures need to be revised? If yes, how?", "q10")}
+      ${pjoQuestion(11, "Duration of Observation", "q11", false)}
+      <div class="form-grid">
+        <label>Start Time<input id="pjo_start_time" type="time"></label>
+        <label>Stop Time<input id="pjo_stop_time" type="time"></label>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Recommended Follow-up</h3>
+      <label>Recommended Follow-up<textarea id="pjo_followup"></textarea></label>
+      <label>Responsible Person<input id="pjo_responsible"></label>
+      <label>Due Date<input id="pjo_due_date" type="date"></label>
+      <label>Completion Signature & Date<input id="pjo_completion"></label>
+    </div>
+
+    <div class="form-section">
+      <h3>Please Consider While Observing</h3>
+      <div class="form-check-grid">
+        ${check("pjo_obs_ptw","Point Safety System / PTW")}
+        ${check("pjo_obs_procedures","Procedures and Safe Storage")}
+        ${check("pjo_obs_ppe","Personal Protective Equipment")}
+        ${check("pjo_obs_ergonomics","Ergonomics / Position")}
+        ${check("pjo_obs_incidents","Previous Incidents / Special Rules")}
+        ${check("pjo_obs_training","Training Requirements")}
+        ${check("pjo_obs_materials","Materials")}
+        ${check("pjo_obs_housekeeping","Housekeeping")}
+        ${check("pjo_obs_isolation","Isolation / Lock Out Tag Out")}
+        ${check("pjo_obs_equipment","Equipment / Tools")}
+        ${check("pjo_obs_electrical","Electrical Hazards")}
+        ${check("pjo_obs_fire","Fire Hazards")}
+        ${check("pjo_obs_emergency","Emergency Exits / First Aid / Eyewash")}
+        ${check("pjo_obs_extinguisher","Fire Extinguishers")}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Signatures</h3>
+      <div class="form-grid">
+        ${sig("Employee #1 Name / Signature", "pjo_sig_emp1")}
+        ${sig("Employee #2 Name / Signature", "pjo_sig_emp2")}
+        ${sig("Observer / Crew Trainer", "pjo_sig_observer")}
+        ${sig("Supervisor", "pjo_sig_supervisor")}
+        ${sig("Superintendent / Area Manager", "pjo_sig_manager")}
+        ${sig("Safety Coordinator", "pjo_sig_safety")}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Photos / Evidence</h3>
+      <label>Attach Photos<input id="pjo_photos" type="file" accept="image/*" multiple></label>
+      <label>General Notes<textarea id="pjo_notes"></textarea></label>
+    </div>
+
+    <button type="button" class="save-btn" onclick="saveFillableForm()">Save PJO</button>
+    <button type="button" class="secondary" onclick="printCurrentForm()">Print / PDF</button>
+  </div>
+  `;
+  const d = new Date().toISOString().split("T")[0];
+  const dateEl = document.getElementById("pjo_date");
+  if(dateEl && !dateEl.value) dateEl.value = d;
+}
+
+function pjoQuestion(num, text, id, yesno=true){
+  return `
+    <div class="form-question">
+      <div class="form-question-title">${num}. ${esc(text)}</div>
+      ${yesno ? yn("pjo_"+id) : ""}
+      <textarea id="pjo_${id}_comment" placeholder="Comments / Тайлбар"></textarea>
+    </div>
+  `;
+}
+
+function check(id,label){
+  return `<label class="form-check"><input type="checkbox" id="${id}"> ${esc(label)}</label>`;
+}
+
+function sig(label,id){
+  return `<div class="signature-box"><div class="signature-line"></div><label>${esc(label)}<input id="${id}" placeholder="Type name / signed"></label></div>`;
+}
+
+function collectPJO(){
+  const ids = Array.from(document.querySelectorAll("#currentFormPrintable input, #currentFormPrintable textarea, #currentFormPrintable select"));
+  const data = {};
+  ids.forEach(el => {
+    if(el.type === "checkbox") data[el.id] = el.checked;
+    else if(el.type === "radio"){
+      if(el.checked) data[el.name] = el.value;
+    } else if(el.type !== "file") data[el.id] = el.value;
+  });
+  return data;
+}
+
+function saveFillableForm(){
+  if(!canWrite()){
+    alert("Viewer role is read-only.");
+    return;
+  }
+  const type = document.getElementById("formType")?.value || "pjo";
+  const data = type === "pjo" ? collectPJO() : {};
+  const title = type === "pjo" ? "Planned Job Observation" : document.getElementById("formType")?.selectedOptions[0]?.textContent || "Form";
+
+  const doc = {
+    id:"form_"+Date.now(),
+    type,
+    title,
+    data,
+    created_at:new Date().toISOString(),
+    created_by:currentUser?.email || "",
+    synced:false
+  };
+
+  savedForms.unshift(doc);
+  saveFormsLocal();
+  renderSavedForms();
+  alert("Form saved locally.");
+}
+
+function saveFormsLocal(){
+  localStorage.setItem("uds_enterprise_forms", JSON.stringify(savedForms));
+}
+
+function renderSavedForms(){
+  const el = document.getElementById("savedFormsList");
+  if(!el) return;
+  el.innerHTML = savedForms.length ? savedForms.map(f => `
+    <div class="form-doc-card">
+      <b>${esc(f.title)}</b>
+      <span class="badge">${esc(f.type)}</span>
+      <p>${new Date(f.created_at).toLocaleString()}</p>
+      <p>Created by: ${esc(f.created_by)}</p>
+      <button type="button" onclick="viewSavedForm('${f.id}')">View</button>
+    </div>
+  `).join("") : "<div class='notice'>No saved forms yet.</div>";
+}
+
+function viewSavedForm(id){
+  const f = savedForms.find(x => x.id === id);
+  if(!f) return;
+  alert(`${f.title}\\nCreated: ${new Date(f.created_at).toLocaleString()}\\nSaved locally.`);
+}
+
+function printCurrentForm(){
+  window.print();
+}
+
+function aiSummarizeForm(){
+  const type = document.getElementById("formType")?.value || "pjo";
+  const data = type === "pjo" ? collectPJO() : {};
+  showTab("ai");
+  rawNote.value = "Summarize this completed form and identify follow-up actions: " + JSON.stringify(data);
+  aiAskQuestion();
+}
+
+function renderAll(){applyRoleView();renderDevRolePreview();renderSavedForms();renderDashboard();renderActions();renderGallery();renderMineMap();checkSupabase()}
 function renderDashboard(){let today=new Date().toISOString().split("T")[0],todays=entries.filter(e=>e.date===today),open=actions.filter(a=>a.status!=="Closed");tileHeadings.textContent=todays.length;tileMetres.textContent=sum(todays,"metresAdvanced").toFixed(1);tileBolts.textContent=sum(todays,"boltsInstalled");tileShotcrete.textContent=sum(todays,"shotcreteM3").toFixed(1);tileDelay.textContent=sum(todays,"delayHours").toFixed(1);tileActions.textContent=open.length;recentLogs.innerHTML=entries.slice(0,5).map(logCard).join("");headingDashboard.innerHTML=Object.entries(groupBy(entries,"heading")).map(([h,arr])=>`<div class="item"><b>${esc(h)}</b><br>${arr.length} entries | ${sum(arr,"metresAdvanced").toFixed(1)}m | ${sum(arr,"boltsInstalled")} bolts | ${sum(arr,"delayHours").toFixed(1)} delay hrs</div>`).join("")}
 function logCard(e){return `<div class="item"><b>${esc(e.heading)}</b><span class="badge">${esc(e.shift)}</span><span class="badge">${esc(e.activity)}</span><span class="badge ${e.synced?'synced':'unsynced'}">${e.synced?'Synced':'Offline'}</span><p><b>Job:</b> ${esc(e.job)}</p><p>${e.metresAdvanced||0}m | ${e.boltsInstalled||0} bolts | ${e.shotcreteM3||0}m³ | Photos: ${(e.photos||[]).length}</p></div>`}
 function renderGallery(){let photos=[];entries.forEach((e,ei)=>(e.photos||[]).forEach((p,pi)=>photos.push({src:p,heading:e.heading,date:e.date,ei,pi})));galleryGrid.innerHTML=photos.length?photos.map((p,i)=>`<div class="gallery-card"><img src="${p.src}" onclick="openGalleryPhoto(${i})"><b>${esc(p.heading)}</b><br><small>${esc(p.date)}</small></div>`).join(""):"<div class='notice'>No photos yet.</div>";window._galleryPhotos=photos}
