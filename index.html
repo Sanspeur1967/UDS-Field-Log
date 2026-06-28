@@ -6,27 +6,31 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro v9 Multi-User</title>
+<title>UDS Development Pro Enterprise 1.0</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=9.0">
+<link rel="stylesheet" href="style.css?v=1.0">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
   <div class="auth-card">
     <h1>UDS Development Pro</h1>
-    <p>Secure multi-user login</p>
-    <label>Email<input id="loginEmail" type="email" placeholder="name@company.com"></label>
-    <label>Password<input id="loginPassword" type="password" placeholder="Password"></label>
+    <p>Enterprise secure login</p>
+
+    <label>Email<input id="loginEmail" type="email" autocomplete="email" placeholder="name@company.com"></label>
+    <label>Password<input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password"></label>
+
     <button type="button" onclick="loginUser()">Login</button>
     <button type="button" class="secondary" onclick="signupUser()">Create User</button>
+    <button type="button" class="secondary" onclick="resetPassword()">Reset Password</button>
+
     <p id="authMessage" class="auth-message"></p>
-    <p class="hint">Production setup should use approved users only.</p>
+    <p class="hint">Admin users should be created/approved in Supabase Authentication.</p>
   </div>
 </div>
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">v9 Enterprise • secure multi-user login</p>
+    <p id="syncStatus">Enterprise 1.0 • secure login</p>
   </div>
   <div class="header-actions">
     <span id="currentUserEmail">Not signed in</span>
@@ -249,7 +253,8 @@
   <p class="markup-help">Tap to add. Tap/drag to move. Use rotate/size buttons for selected object.</p>
 </div>
 
-<script src="config.js?v=9.0"></script>
-<script src="app.js?v=9.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js?v=1.0"></script>
+<script src="app.js?v=1.0"></script>
 </body>
 </html>

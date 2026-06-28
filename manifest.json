@@ -1,10 +1,10 @@
 {
   "name": "UDS Development Pro Enterprise",
   "short_name": "UDS Pro",
-  "start_url": "./index.html?v=9.0",
+  "start_url": "./index.html?v=1.0",
   "display": "standalone",
   "background_color": "#edf2f7",
   "theme_color": "#0b1220",
-  "description": "UDS Development Pro v9 Multi-User Login.",
+  "description": "UDS Development Pro Enterprise 1.0 with proper Supabase Auth.",
   "icons": []
 }
