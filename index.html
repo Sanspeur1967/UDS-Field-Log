@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro Enterprise 3.5</title>
+<title>UDS Development Pro Enterprise 4.0 RC1</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=3.5">
+<link rel="stylesheet" href="style.css?v=4.0rc1">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -41,7 +41,7 @@
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">Enterprise 3.5 • bilingual forms + signatures</p>
+    <p id="syncStatus">Enterprise 4.0 RC1 • official forms engine</p>
   </div>
   <div class="header-actions">
     <span id="currentUserEmail">Not signed in</span>
@@ -57,7 +57,7 @@
   <button data-tab="forms">Forms</button>
   <button data-tab="map">Map</button>
   <button data-tab="ai">AI</button>
-  <button data-tab="more">More</button>
+  <button data-tab="documents">Docs</button>
 </nav>
 
 <main>
@@ -206,6 +206,22 @@
     <button type="button" class="secondary" onclick="printEntryReport()">Print / PDF</button>
   </div>
   <div id="entryReportContent"></div>
+</section>
+
+
+<section id="documents" class="tab">
+  <div class="section-title">
+    <h2>Document Centre</h2>
+    <p>Official bilingual forms, document numbers, signatures and print records</p>
+  </div>
+  <div class="form-card">
+    <div class="quick">
+      <button type="button" onclick="showTab('forms')">Create New Form</button>
+      <button type="button" class="secondary" onclick="renderDocumentCentre()">Refresh</button>
+      <button type="button" class="secondary" onclick="printDocumentRegister()">Print Register</button>
+    </div>
+  </div>
+  <div id="documentCentreList"></div>
 </section>
 
 <section id="forms" class="tab">
@@ -396,8 +412,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=3.5"></script>
-<script src="app.js?v=3.5"></script>
+<script src="config.js?v=4.0rc1"></script>
+<script src="app.js?v=4.0rc1"></script>
 
 <div id="signatureModal" class="signature-modal hidden">
   <div class="signature-card">
