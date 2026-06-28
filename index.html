@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro Enterprise 2.3</title>
+<title>UDS Development Pro Enterprise 3.0</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=2.3">
+<link rel="stylesheet" href="style.css?v=3.0">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -41,7 +41,7 @@
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">Enterprise 2.3 • forms centre</p>
+    <p id="syncStatus">Enterprise 3.0 • role-based platform</p>
   </div>
   <div class="header-actions">
     <span id="currentUserEmail">Not signed in</span>
@@ -63,6 +63,7 @@
 <section id="dashboard" class="tab active">
   <div class="section-title"><h2 id="roleDashboardTitle">Dashboard</h2><p id="roleDashboardSubtitle">Production, delays, safety and actions</p></div>
   <div id="roleViewPanel" class="role-view-panel"></div>
+  <div id="roleScopePanel" class="role-scope-panel"></div>
   <div class="tiles">
     <div class="tile"><b id="tileHeadings">0</b><span>Headings</span></div>
     <div class="tile"><b id="tileMetres">0.0</b><span>Metres</span></div>
@@ -178,7 +179,8 @@
     <div class="quick">
       <button type="button" onclick="newForm()">New Form</button>
       <button type="button" class="secondary" onclick="renderSavedForms()">Saved Forms</button>
-      <button type="button" class="secondary" onclick="printCurrentForm()">Print / PDF</button>
+      <button type="button" class="secondary" onclick="printSavedForms()">Print Saved Forms List</button>
+      <button type="button" class="secondary" onclick="printCurrentForm()">Print Current Form</button>
       <button type="button" class="ai" onclick="aiSummarizeForm()">AI Summary</button>
     </div>
   </div>
@@ -284,9 +286,10 @@
         <option>Manager</option>
         <option>Superintendent</option>
         <option>Supervisor</option>
-        <option>Viewer</option>
       </select>
     </label>
+    <label>Area Scope<input id="adminAreaScope" placeholder="Civil / E&I / Piping / All"></label>
+    <label>Reports To<input id="adminReportsTo" placeholder="Manager or Superintendent email"></label>
     <label>Active
       <select id="adminActive">
         <option value="true">Active</option>
@@ -345,7 +348,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=2.3"></script>
-<script src="app.js?v=2.3"></script>
+<script src="config.js?v=3.0"></script>
+<script src="app.js?v=3.0"></script>
 </body>
 </html>

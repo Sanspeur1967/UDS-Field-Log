@@ -181,7 +181,7 @@ let savedForms=JSON.parse(localStorage.getItem("uds_enterprise_forms")||"[]");
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=2.3")};
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=3.0")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="forms"){renderSelectedForm();renderSavedForms();}if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
@@ -358,7 +358,7 @@ async function saveEntry(){if(!canWrite()){alert("Viewer role is read-only.");re
 function saveAction(){if(!canWrite()){alert("Viewer role is read-only.");return;}let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 2.3",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 3.0",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
@@ -572,55 +572,29 @@ function renderDevRolePreview(){
 function getRoleName(){ return previewRole || currentUserRole?.role || "Viewer"; }
 
 
+
+function roleLevel(role){
+  return {Supervisor:1,Superintendent:2,Manager:3,Admin:4}[role] || 1;
+}
+function getRoleName(){ return previewRole || currentUserRole?.role || "Supervisor"; }
+function canCreate(){ return roleLevel(getRoleName()) >= 1; }
+function canViewCrew(){ return roleLevel(getRoleName()) >= 2; }
+function canViewAll(){ return roleLevel(getRoleName()) >= 3; }
+function canAdmin(){ return getRoleName() === "Admin" && currentUserRole?.role === "Admin"; }
+function canManageUsers(){ return canAdmin(); }
+function canReviewForms(){ return roleLevel(getRoleName()) >= 2; }
+
 function roleAction(action){
-  if(action === "users"){
-    showTab("admin");
-    setTimeout(() => {
-      const el = document.getElementById("adminEmail");
-      if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
-    }, 100);
-    return;
-  }
-  if(action === "entries"){
-    showTab("dashboard");
-    const el = document.getElementById("recentLogs");
-    if(el) setTimeout(()=>el.scrollIntoView({behavior:"smooth", block:"start"}), 100);
-    return;
-  }
-  if(action === "actions"){
-    showTab("actions");
-    return;
-  }
-  if(action === "installer"){
-    showTab("admin");
-    setTimeout(() => {
-      const el = document.getElementById("installerStatus");
-      if(el) {
-        el.scrollIntoView({behavior:"smooth", block:"center"});
-        checkInstallerStatus();
-      }
-    }, 150);
-    return;
-  }
-  if(action === "reports"){
-    showTab("report");
-    return;
-  }
-  if(action === "ai"){
-    showTab("ai");
-    return;
-  }
-  if(action === "gallery"){showTab("gallery");return;}
-  if(action === "forms"){showTab("forms");return;}
-  if(action === "map"){
-    showTab("map");
-    return;
-  }
-  if(action === "dashboard"){showTab("dashboard");return;}
-  if(action === "entry"){
-    showTab("entry");
-    return;
-  }
+  if(action==="entry"){showTab("entry");return;}
+  if(action==="forms"){showTab("forms");return;}
+  if(action==="gallery"){showTab("gallery");return;}
+  if(action==="map"){showTab("map");return;}
+  if(action==="ai"){showTab("ai");return;}
+  if(action==="report"){showTab("report");return;}
+  if(action==="actions"){showTab("actions");return;}
+  if(action==="admin"){showTab("admin");return;}
+  if(action==="dashboard"){showTab("dashboard");return;}
+  if(action==="installer"){showTab("admin");setTimeout(()=>checkInstallerStatus(),150);return;}
 }
 
 function applyRoleView(){
@@ -628,56 +602,81 @@ function applyRoleView(){
   const title = document.getElementById("roleDashboardTitle");
   const subtitle = document.getElementById("roleDashboardSubtitle");
   const panel = document.getElementById("roleViewPanel");
+  const scope = document.getElementById("roleScopePanel");
   if(!title || !panel) return;
 
-  const roleConfig = {
-    Admin: {
-      title:"Admin Dashboard",
-      subtitle:"System control, users, production, actions and audit readiness",
-      items:[{label:"User roles and access",action:"users"},{label:"All production entries",action:"entries"},{label:"All actions",action:"actions"},{label:"System installation status",action:"installer"},{label:"Reports and AI tools",action:"reports"},{label:"Forms Centre",action:"forms"}]
-    },
-    Manager: {
-      title:"Manager Dashboard",
-      subtitle:"High-level production, delays, safety and team performance",
-      items:[{label:"All headings overview",action:"map"},{label:"Production trends",action:"dashboard"},{label:"Open actions",action:"actions"},{label:"Delay hotspots",action:"ai"},{label:"AI summaries",action:"ai"},{label:"Forms Review",action:"forms"}]
-    },
-    Superintendent: {
-      title:"Superintendent Dashboard",
-      subtitle:"Shift execution, supervisors, headings, actions and handovers",
-      items:[{label:"Supervisor entries",action:"entries"},{label:"Heading history",action:"map"},{label:"Open actions",action:"actions"},{label:"Daily report",action:"reports"},{label:"AI handover",action:"ai"},{label:"PJO / Coaching Forms",action:"forms"}]
-    },
-    Supervisor: {
+  const config = {
+    Supervisor:{
       title:"Supervisor Dashboard",
-      subtitle:"Create shift logs, photos, actions and next shift plan",
-      items:[{label:"Create entries",action:"entry"},{label:"Photo editor",action:"entry"},{label:"Own shift actions",action:"actions"},{label:"Daily report",action:"reports"},{label:"Voice notes",action:"entry"},{label:"Complete Forms",action:"forms"}]
+      subtitle:"My shift entries, my forms, my photos, actions and AI handover.",
+      actions:[
+        ["Development Entry","entry"],["Complete Forms","forms"],["My Actions","actions"],["My Photos","gallery"],["Shift Report","report"],["AI Assistant","ai"]
+      ],
+      scope:["Own Entries","Own Forms","Own Photos","Own Actions"]
     },
-    Viewer: {
-      title:"Viewer Dashboard",
-      subtitle:"Read-only view for reports and production status",
-      items:[{label:"View reports",action:"reports"},{label:"View photos",action:"gallery"},{label:"View heading history",action:"map"},{label:"Read-only access",action:"dashboard"}]
+    Superintendent:{
+      title:"Superintendent Dashboard",
+      subtitle:"Area-level review of supervisors, headings, forms, delays and actions.",
+      actions:[
+        ["Area Production","dashboard"],["Supervisor Entries","dashboard"],["Forms Review","forms"],["Heading History","map"],["Open Actions","actions"],["AI Daily Summary","ai"]
+      ],
+      scope:["Area Entries","Supervisor Forms","Area Photos","KPI / Delays"]
+    },
+    Manager:{
+      title:"Manager Dashboard",
+      subtitle:"Department-wide production, safety, forms, action and AI trend review.",
+      actions:[
+        ["Production Dashboard","dashboard"],["All Forms","forms"],["All Actions","actions"],["All Photos","gallery"],["AI Executive Summary","ai"],["Reports","report"]
+      ],
+      scope:["All Entries","All Forms","All Photos","Executive Trends"]
+    },
+    Admin:{
+      title:"Admin Dashboard",
+      subtitle:"System health, users, roles, all records, installer status and developer preview.",
+      actions:[
+        ["User Management","admin"],["All Production Entries","dashboard"],["All Forms","forms"],["All Actions","actions"],["Installer Status","installer"],["AI / Reports","ai"]
+      ],
+      scope:["Users / Roles","Database Health","All Records","Developer Preview"]
     }
   };
 
-  const cfg = roleConfig[role] || roleConfig.Viewer;
+  const cfg = config[role] || config.Supervisor;
   title.textContent = cfg.title;
   subtitle.textContent = cfg.subtitle;
-  panel.innerHTML = `<div class="role-banner"><h3>${esc(role)} View${previewRole ? ' (Preview)' : ''}</h3><p>${esc(cfg.subtitle)}</p><div class="role-list">${cfg.items.map(i=>`<button type="button" class="role-action-btn" onclick="roleAction('${i.action}')">${esc(i.label)}</button>`).join("")}</div></div>`;
+  panel.innerHTML = `<div class="role-banner"><h3>${esc(role)} View${previewRole ? " (Preview)" : ""}</h3><p>${esc(cfg.subtitle)}</p><div class="role-list">${cfg.actions.map(a=>`<button type="button" class="role-action-btn" onclick="roleAction('${a[1]}')">${esc(a[0])}</button>`).join("")}</div></div>`;
+  if(scope){
+    scope.innerHTML = `<div class="scope-grid">${cfg.scope.map(s=>`<div class="scope-card"><b>${esc(s)}</b><span>${esc(role)} access</span></div>`).join("")}</div>
+    <p>
+      <span class="role-permission-tag">Create Forms</span>
+      <span class="role-permission-tag ${canViewCrew()?'':'blocked'}">Crew / Area View</span>
+      <span class="role-permission-tag ${canViewAll()?'':'blocked'}">All Records</span>
+      <span class="role-permission-tag ${canAdmin()?'':'blocked'}">Admin Tools</span>
+    </p>`;
+  }
 
-  const entryBtn = document.querySelector('button[data-tab="entry"]');
-  const actionsBtn = document.querySelector('button[data-tab="actions"]');
-  const adminBtn = document.getElementById("adminNavButton");
-
-  if(entryBtn) entryBtn.style.display = (role === "Viewer") ? "none" : "block";
-  if(actionsBtn) actionsBtn.style.display = (role === "Viewer") ? "none" : "block";
-  if(adminBtn) adminBtn.style.display = (role === "Admin") ? "block" : "none";
-
-  const saveButtons = document.querySelectorAll(".save-btn, button[onclick='saveAction()']");
-  saveButtons.forEach(b => b.style.display = (role === "Viewer") ? "none" : "inline-block");
+  const adminBtn=document.getElementById("adminNavButton");
+  if(adminBtn) adminBtn.style.display=canAdmin()?"block":"none";
 }
 
 function canWrite(){
-  const role = getRoleName();
-  return ["Admin","Manager","Superintendent","Supervisor"].includes(role);
+  return canCreate();
+}
+
+function canViewAllForms(){
+  return canReviewForms();
+}
+function setFormsViewMode(mode){
+  if(mode==="all" && !canViewAllForms()){alert("Superintendent, Manager or Admin access required.");return;}
+  formsViewMode=mode;localStorage.setItem("uds_forms_view_mode",mode);renderSavedForms();
+}
+function getVisibleForms(){
+  if(canViewAllForms() && formsViewMode==="all") return savedForms;
+  const email=currentUser?.email||"";
+  return savedForms.filter(f=>!email || f.created_by===email);
+}
+function updateFormsManagerControls(){
+  const box=document.getElementById("formsManagerControls");
+  if(box) box.style.display=canViewAllForms()?"block":"none";
 }
 
 async function checkInstallerStatus(){
@@ -940,6 +939,50 @@ function saveFormsLocal(){
   localStorage.setItem("uds_enterprise_forms", JSON.stringify(savedForms));
 }
 
+
+function printSavedForms(){
+  const win = window.open("", "_blank");
+  if(!win){
+    alert("Popup blocked. Allow popups for this site.");
+    return;
+  }
+
+  const rows = savedForms.map(f => `
+    <tr>
+      <td>${esc(f.title)}</td>
+      <td>${esc(f.type)}</td>
+      <td>${new Date(f.created_at).toLocaleString()}</td>
+      <td>${esc(f.created_by)}</td>
+    </tr>
+  `).join("");
+
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Saved Forms List</title>
+      <style>
+        body{font-family:Arial,sans-serif;margin:20px;color:#172033}
+        table{width:100%;border-collapse:collapse}
+        th,td{border:1px solid #94a3b8;padding:8px;text-align:left}
+        th{background:#e5e7eb}
+      </style>
+    </head>
+    <body>
+      <h1>UDS Development Pro - Saved Forms</h1>
+      <table>
+        <thead><tr><th>Title</th><th>Type</th><th>Created</th><th>Created By</th></tr></thead>
+        <tbody>${rows || "<tr><td colspan='4'>No saved forms.</td></tr>"}</tbody>
+      </table>
+    </body>
+    </html>
+  `);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 500);
+}
+
+
 function renderSavedForms(){
   const el = document.getElementById("savedFormsList");
   if(!el) return;
@@ -960,9 +1003,53 @@ function viewSavedForm(id){
   alert(`${f.title}\\nCreated: ${new Date(f.created_at).toLocaleString()}\\nSaved locally.`);
 }
 
+
 function printCurrentForm(){
-  window.print();
+  const current = document.getElementById("currentFormPrintable");
+  if(!current){
+    alert("Open a form first, then print.");
+    return;
+  }
+
+  const win = window.open("", "_blank");
+  if(!win){
+    alert("Popup blocked. Allow popups for this site or use browser Print.");
+    return;
+  }
+
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>UDS Form Print</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body{font-family:Arial,sans-serif;color:#172033;margin:20px}
+        .form-template{box-shadow:none!important;border-radius:0!important}
+        .form-header-dayan{display:flex;justify-content:space-between;border-bottom:3px solid #7f1d1d;padding-bottom:10px;margin-bottom:12px}
+        .form-logo{font-size:28px;font-weight:900;color:#1e3a8a}
+        .form-logo span{color:#991b1b}
+        .form-title{text-align:right}
+        .form-title h2{margin:0;color:#7f1d1d}
+        .form-section{border:1px solid #cbd5e1;padding:10px;margin:10px 0;page-break-inside:avoid}
+        .form-grid,.form-check-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        label{font-weight:700}
+        input,textarea,select{border:0;border-bottom:1px solid #94a3b8;font-size:14px;width:100%;min-height:24px}
+        textarea{min-height:60px}
+        button,.quick{display:none!important}
+        .yes-no{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+        .form-check{display:flex;gap:6px;align-items:center}
+        @media print{body{margin:10mm}}
+      </style>
+    </head>
+    <body>${current.outerHTML}</body>
+    </html>
+  `);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 500);
 }
+
 
 function aiSummarizeForm(){
   const type = document.getElementById("formType")?.value || "pjo";
@@ -972,7 +1059,7 @@ function aiSummarizeForm(){
   aiAskQuestion();
 }
 
-function renderAll(){applyRoleView();renderDevRolePreview();renderSavedForms();renderDashboard();renderActions();renderGallery();renderMineMap();checkSupabase()}
+function renderAll(){applyRoleView();renderSavedForms();applyRoleView();renderDevRolePreview();renderSavedForms();renderDashboard();renderActions();renderGallery();renderMineMap();checkSupabase()}
 function renderDashboard(){let today=new Date().toISOString().split("T")[0],todays=entries.filter(e=>e.date===today),open=actions.filter(a=>a.status!=="Closed");tileHeadings.textContent=todays.length;tileMetres.textContent=sum(todays,"metresAdvanced").toFixed(1);tileBolts.textContent=sum(todays,"boltsInstalled");tileShotcrete.textContent=sum(todays,"shotcreteM3").toFixed(1);tileDelay.textContent=sum(todays,"delayHours").toFixed(1);tileActions.textContent=open.length;recentLogs.innerHTML=entries.slice(0,5).map(logCard).join("");headingDashboard.innerHTML=Object.entries(groupBy(entries,"heading")).map(([h,arr])=>`<div class="item"><b>${esc(h)}</b><br>${arr.length} entries | ${sum(arr,"metresAdvanced").toFixed(1)}m | ${sum(arr,"boltsInstalled")} bolts | ${sum(arr,"delayHours").toFixed(1)} delay hrs</div>`).join("")}
 function logCard(e){return `<div class="item"><b>${esc(e.heading)}</b><span class="badge">${esc(e.shift)}</span><span class="badge">${esc(e.activity)}</span><span class="badge ${e.synced?'synced':'unsynced'}">${e.synced?'Synced':'Offline'}</span><p><b>Job:</b> ${esc(e.job)}</p><p>${e.metresAdvanced||0}m | ${e.boltsInstalled||0} bolts | ${e.shotcreteM3||0}m³ | Photos: ${(e.photos||[]).length}</p></div>`}
 function renderGallery(){let photos=[];entries.forEach((e,ei)=>(e.photos||[]).forEach((p,pi)=>photos.push({src:p,heading:e.heading,date:e.date,ei,pi})));galleryGrid.innerHTML=photos.length?photos.map((p,i)=>`<div class="gallery-card"><img src="${p.src}" onclick="openGalleryPhoto(${i})"><b>${esc(p.heading)}</b><br><small>${esc(p.date)}</small></div>`).join(""):"<div class='notice'>No photos yet.</div>";window._galleryPhotos=photos}
