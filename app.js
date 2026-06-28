@@ -181,7 +181,7 @@ let savedForms=JSON.parse(localStorage.getItem("uds_enterprise_forms")||"[]");
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=3.1")};
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=3.2")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="forms"){renderSelectedForm();renderSavedForms();}if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
@@ -358,7 +358,7 @@ async function saveEntry(){if(!canWrite()){alert("Viewer role is read-only.");re
 function saveAction(){if(!canWrite()){alert("Viewer role is read-only.");return;}let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 3.1",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 3.2",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
@@ -1306,4 +1306,159 @@ function renderSavedForms(){
       </div>
     </div>
   `).join("") : "<div class='notice'>No saved forms yet.</div>");
+}
+
+
+
+/* Enterprise 3.2 Admin Dashboard + View-As Fix */
+function getActualRoleName(){
+  return currentUserRole?.role || "Supervisor";
+}
+function isActualAdmin(){
+  return getActualRoleName() === "Admin";
+}
+function getRoleName(){
+  if(isActualAdmin() && previewRole) return previewRole;
+  return getActualRoleName();
+}
+function setPreviewRole(role){
+  if(!isActualAdmin()){
+    alert("Only Admin can preview other roles.");
+    return;
+  }
+  previewRole = (role === "Admin" || role === "Actual") ? null : role;
+  localStorage.setItem("uds_preview_role", previewRole || "");
+  applyRoleView();
+  renderDevRolePreview();
+}
+function loadPreviewRole(){
+  const stored = localStorage.getItem("uds_preview_role") || "";
+  previewRole = stored && ["Manager","Superintendent","Supervisor"].includes(stored) ? stored : null;
+}
+function canAdmin(){
+  return isActualAdmin() && !previewRole;
+}
+function canManageUsers(){
+  return isActualAdmin();
+}
+function roleLevel(role){
+  return {Supervisor:1,Superintendent:2,Manager:3,Admin:4}[role] || 1;
+}
+function canCreate(){ return roleLevel(getRoleName()) >= 1; }
+function canViewCrew(){ return roleLevel(getRoleName()) >= 2; }
+function canViewAll(){ return roleLevel(getRoleName()) >= 3 || isActualAdmin(); }
+function canReviewForms(){ return roleLevel(getRoleName()) >= 2 || isActualAdmin(); }
+function canWrite(){ return canCreate(); }
+function canViewAllForms(){ return canReviewForms(); }
+
+function renderDevRolePreview(){
+  const existing = document.getElementById("devRolePreview");
+  if(existing) existing.remove();
+
+  if(!isActualAdmin()) return;
+
+  const dashboard = document.getElementById("dashboard");
+  const titleCard = dashboard?.querySelector(".section-title");
+  if(!dashboard || !titleCard) return;
+
+  const current = previewRole || "Admin";
+  const roles = ["Admin","Manager","Superintendent","Supervisor"];
+  const div = document.createElement("div");
+  div.id = "devRolePreview";
+  div.className = "view-as-panel";
+  div.innerHTML = `
+    <h3>Admin View-As Mode</h3>
+    <p>You are logged in as Admin. Switch views without changing your real database role.</p>
+    <div class="view-as-buttons">
+      ${roles.map(r => `<button type="button" class="${current===r?'active':''}" onclick="setPreviewRole('${r}')">${r}</button>`).join("")}
+    </div>
+  `;
+  titleCard.insertAdjacentElement("afterend", div);
+}
+
+function roleAction(action){
+  if(action==="entry"){showTab("entry");return;}
+  if(action==="forms"){showTab("forms");return;}
+  if(action==="gallery"){showTab("gallery");return;}
+  if(action==="map"){showTab("map");return;}
+  if(action==="ai"){showTab("ai");return;}
+  if(action==="report"){showTab("report");return;}
+  if(action==="actions"){showTab("actions");return;}
+  if(action==="admin"){showTab("admin");return;}
+  if(action==="dashboard"){showTab("dashboard");return;}
+  if(action==="installer"){showTab("admin");setTimeout(()=>checkInstallerStatus && checkInstallerStatus(),150);return;}
+}
+
+function applyRoleView(){
+  const role = getRoleName();
+  const actual = getActualRoleName();
+  const isPreview = isActualAdmin() && !!previewRole;
+
+  const title = document.getElementById("roleDashboardTitle");
+  const subtitle = document.getElementById("roleDashboardSubtitle");
+  const panel = document.getElementById("roleViewPanel");
+  const scope = document.getElementById("roleScopePanel");
+  if(!title || !panel) return;
+
+  const config = {
+    Supervisor:{
+      title:"Supervisor Dashboard",
+      subtitle:"My shift entries, my forms, my photos, actions and AI handover.",
+      actions:[["Development Entry","entry"],["Complete Forms","forms"],["My Actions","actions"],["My Photos","gallery"],["Shift Report","report"],["AI Assistant","ai"]],
+      scope:["Own Entries","Own Forms","Own Photos","Own Actions"]
+    },
+    Superintendent:{
+      title:"Superintendent Dashboard",
+      subtitle:"Area-level review of supervisors, headings, forms, delays and actions.",
+      actions:[["Area Production","dashboard"],["Supervisor Entries","dashboard"],["Forms Review","forms"],["Heading History","map"],["Open Actions","actions"],["AI Daily Summary","ai"]],
+      scope:["Area Entries","Supervisor Forms","Area Photos","KPI / Delays"]
+    },
+    Manager:{
+      title:"Manager Dashboard",
+      subtitle:"Department-wide production, safety, forms, action and AI trend review.",
+      actions:[["Production Dashboard","dashboard"],["All Forms","forms"],["All Actions","actions"],["All Photos","gallery"],["AI Executive Summary","ai"],["Reports","report"]],
+      scope:["All Entries","All Forms","All Photos","Executive Trends"]
+    },
+    Admin:{
+      title:"Admin Dashboard",
+      subtitle:"System administration, users, roles, database health, installer status and all records.",
+      actions:[["User Management","admin"],["System Installation Status","installer"],["All Production Entries","dashboard"],["All Forms","forms"],["All Actions","actions"],["AI / Reports","ai"]],
+      scope:["Users / Roles","Database Health","All Records","Developer View-As"]
+    }
+  };
+
+  const cfg = config[role] || config.Supervisor;
+  title.textContent = cfg.title;
+  subtitle.textContent = cfg.subtitle;
+
+  panel.innerHTML = `
+    <div class="role-banner">
+      <h3>${esc(role)} View${isPreview ? " (Preview)" : ""}</h3>
+      <p>${esc(cfg.subtitle)}</p>
+      ${isPreview ? `<p><b>Actual Login:</b> ${esc(actual)} — previewing ${esc(role)}</p>` : ""}
+      <div class="role-list">
+        ${cfg.actions.map(a=>`<button type="button" class="role-action-btn" onclick="roleAction('${a[1]}')">${esc(a[0])}</button>`).join("")}
+      </div>
+    </div>`;
+
+  if(scope){
+    scope.innerHTML = `<div class="scope-grid">${cfg.scope.map(s=>`<div class="scope-card"><b>${esc(s)}</b><span>${esc(role)} access</span></div>`).join("")}</div>
+      <p>
+        <span class="role-permission-tag">Create Forms</span>
+        <span class="role-permission-tag ${canViewCrew()?'':'blocked'}">Crew / Area View</span>
+        <span class="role-permission-tag ${canViewAll()?'':'blocked'}">All Records</span>
+        <span class="role-permission-tag ${canAdmin()?'':'blocked'}">Admin Tools</span>
+      </p>`;
+  }
+
+  const adminBtn = document.getElementById("adminNavButton");
+  if(adminBtn) adminBtn.style.display = isActualAdmin() ? "block" : "none";
+}
+
+function renderAll(){
+  applyRoleView();
+  renderDevRolePreview();
+  if(typeof renderSavedForms === "function") renderSavedForms();
+  if(typeof renderDashboard === "function") renderDashboard();
+  if(typeof renderActions === "function") renderActions();
 }

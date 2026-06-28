@@ -566,3 +566,31 @@ button.secondary{background:#475569}button.success{background:#16a34a}button.dan
 @media print{
   body{background:white!important}
 }
+
+/* Enterprise 3.2 Admin View-As Fix */
+.view-as-panel{
+  background:white;
+  border-radius:18px;
+  padding:14px;
+  margin:0 0 14px 0;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
+  border-left:6px solid #7c3aed;
+}
+.view-as-panel h3{margin:0 0 8px}
+.view-as-panel p{margin:0 0 10px;color:#64748b}
+.view-as-buttons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.view-as-buttons button{
+  width:100%;
+  margin:0;
+  background:#475569;
+}
+.view-as-buttons button.active{
+  background:#7c3aed;
+}
+@media(min-width:760px){
+  .view-as-buttons{grid-template-columns:repeat(4,1fr)}
+}
