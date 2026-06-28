@@ -181,7 +181,7 @@ let savedForms=JSON.parse(localStorage.getItem("uds_enterprise_forms")||"[]");
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();applyLanguage();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=4.0b1")};
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();applyLanguage();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=4.0b2")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="entriesRegister")renderEntriesRegister();if(id==="forms"){renderSelectedForm();renderSavedForms();}if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
@@ -358,7 +358,7 @@ async function saveEntry(){if(!canWrite()){alert("Viewer role is read-only.");re
 function saveAction(){if(!canWrite()){alert("Viewer role is read-only.");return;}let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 4.0 Build 1",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 4.0 Build 2",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
@@ -2078,4 +2078,226 @@ if(oldShowTab_e40){
     oldShowTab_e40(id);
     if(id === "documents") renderDocumentCentre();
   }
+}
+
+
+
+/* Enterprise 4.0 Build 2 - Official Print Template Overrides */
+function e40v(d,k){ return d && d[k] ? d[k] : ""; }
+function e40cb(v){ return v ? "☑" : "☐"; }
+function e40sig(d,k){ return d && d[k] ? `<img class="print-signature-img" src="${d[k]}">` : ""; }
+function e40yn(d,k){
+  return {
+    yes: d && d[k] === "Yes" ? "☑" : "☐",
+    no: d && d[k] === "No" ? "☑" : "☐"
+  };
+}
+function e40safe(text){
+  return typeof esc === "function" ? esc(text || "") : String(text || "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function buildPJOPrintHTML(f){
+  const d = f.data || {};
+  const yn = k => e40yn(d, k);
+  const row = (num, mn, en, key, yesno=true, h=44) => {
+    const ans = yn("pjo_" + key);
+    return `<tr>
+      <td style="width:7%;text-align:center;font-weight:900">${num}</td>
+      <td style="width:63%;height:${h}px"><b>${mn}</b><br>${en}<br><span style="font-size:9px">${e40safe(d["pjo_"+key+"_comment"])}</span></td>
+      <td style="width:15%;text-align:center">${yesno ? `<span class="official-check">${ans.yes}</span><br>Тийм / Yes` : ""}</td>
+      <td style="width:15%;text-align:center">${yesno ? `<span class="official-check">${ans.no}</span><br>Үгүй / No` : ""}</td>
+    </tr>`;
+  };
+
+  const reason = `
+    ${e40cb(d.pjo_reason_procedure)} Ажлын журам / Job Procedure/Practice Update&nbsp;&nbsp;
+    ${e40cb(d.pjo_reason_injury)} Ажилтай холбоотой осол / Recent injury associated with job/task&nbsp;&nbsp;
+    ${e40cb(d.pjo_reason_training)} Сургалтын мөрөөр / Training follow-up&nbsp;&nbsp;
+    ${e40cb(d.pjo_reason_experienced)} Туршлагатай ажилтны шалгалт / Experienced worker check&nbsp;&nbsp;
+    ${e40cb(d.pjo_reason_other)} Бусад / Other: ${e40safe(d.pjo_reason_other_text)}
+  `;
+
+  const consider = `
+  <table class="official-table">
+    <tr class="official-grey"><td colspan="4">ДАРААХ ЗҮЙЛСИЙГ АЖИГЛАЛТ ХИЙХДЭЭ АНХААРНА УУ / PLEASE CONSIDER THE FOLLOWING WHILE OBSERVING</td></tr>
+    <tr>
+      <td><b>ХҮМҮҮС / People</b><br>5 Point Safety System<br>Procedures and Practices<br>PPE<br>Ergonomics<br>Previous Incidents<br>Special Rules<br>Training Requirements</td>
+      <td><b>МАТЕРИАЛ / Material</b><br>Handling<br>Procedures<br>Safe Storage<br>WHMIS Requirements</td>
+      <td><b>ТӨХӨӨРӨМЖ / Equipment / Tools</b><br>Pre-Use Checks<br>Legislation<br>Maintenance<br>Guarding<br>Electrical Hazards<br>Suitable for the Job<br>Availability<br>Lock Out / Tag Out</td>
+      <td><b>БАЙГАЛЬ ОРЧИН / Environment</b><br>Fire Hazards<br>Emergency Exits<br>Dust / Gas / Noise<br>Housekeeping<br>Lighting<br>Emergency<br>First Aid Supplies<br>Eye Wash<br>Fire Extinguishers</td>
+    </tr>
+  </table>`;
+
+  return `
+  <div class="official-print-root">
+    <div class="official-page">
+      <table class="official-table">
+        <tr>
+          <td style="width:23%" class="official-logo"><span>D</span>AYAN</td>
+          <td colspan="3" class="official-title">АЖЛЫН ТӨЛӨВЛӨГӨӨТ АЖИГЛАЛТ<br>PLANNED JOB OBSERVATION</td>
+        </tr>
+        <tr>
+          <td colspan="2"><b>Ажлын байр / Workplace</b><br>${e40safe(d.pjo_workplace)}</td>
+          <td colspan="2"><b>Ажиглалт хийсэн огноо / Date of observation</b><br>${e40safe(d.pjo_date)}</td>
+        </tr>
+        <tr><td colspan="4"><b>Ажиглалт хийх шалтгаан / Reason for observation</b><br>${reason}</td></tr>
+        <tr>
+          <td><b>Ажиглалтын төрөл / Type of observation</b><br>${e40cb(d.pjo_type_performance)} Performance Demonstration<br>${e40cb(d.pjo_type_followup)} Follow-up</td>
+          <td><b>Ажигласан ажил / Job/task observed</b><br>${e40safe(d.pjo_task)}</td>
+          <td><b>Журмын нэр/дугаар / Procedure name and #</b><br>${e40safe(d.pjo_procedure)}</td>
+          <td><b>Журмыг хянасан уу? / Procedure reviewed?</b><br>${yn("pjo_procedure_reviewed").yes} Yes &nbsp; ${yn("pjo_procedure_reviewed").no} No</td>
+        </tr>
+        <tr class="official-grey"><td colspan="4">АЖИГЛАЛТ ХИЙХ АЖИЛТАН / WORKER(S) TO BE OBSERVED</td></tr>
+        <tr class="official-light">
+          <td><b>Ажилтан #1 / Worker #1</b><br>${e40safe(d.pjo_emp1_name)}</td>
+          <td><b>Мэргэжил / Occupation</b><br>${e40safe(d.pjo_emp1_occupation)}</td>
+          <td><b>Туршлага / Experience</b><br>${e40safe(d.pjo_emp1_experience)}</td>
+          <td><b>Сургагдсан уу? / Trained & licensed?</b><br>${yn("pjo_trained").yes} Yes &nbsp; ${yn("pjo_trained").no} No</td>
+        </tr>
+        <tr class="official-light">
+          <td><b>Ажилтан #2 / Worker #2</b><br>${e40safe(d.pjo_emp2_name)}</td>
+          <td><b>Мэргэжил / Occupation</b><br>${e40safe(d.pjo_emp2_occupation)}</td>
+          <td><b>Туршлага / Experience</b><br>${e40safe(d.pjo_emp2_experience)}</td>
+          <td><b>Сургалтын бүртгэл шалгасан уу? / Training records verified?</b><br>${yn("pjo_training_records").yes} Yes &nbsp; ${yn("pjo_training_records").no} No</td>
+        </tr>
+        <tr class="official-grey"><td colspan="4">АЖИГЛАЛТУУД / OBSERVATIONS</td></tr>
+      </table>
+      <table class="official-table">
+        ${row(1,"Хүн гэмтэх эсвэл осолд дөхсөн тохиолдолд хүргэж болох нөхцөл ажиглагдсан уу?","Could any practices or conditions observed result in personal injury or near miss?","q1")}
+        ${row(2,"Эд хөрөнгийн хохирол учруулж болох нөхцөл ажиглагдсан уу?","Could any practices or conditions observed result in property damage?","q2")}
+        ${row(3,"Холбогдох журам, стандартыг мөрдсөн байсан уу?","Were all applicable procedures/standards followed during the observation?","q3")}
+        ${row(4,"Журам/стандартын гол заалтууд юу байсан бэ?","What key points in the procedure/standard were noticed during the observation?","q4",false,48)}
+        ${row(5,"Ажилтанд эерэг үнэлгээ өгсөн үү?","Was any positive recognition given to the employee(s) following the observation?","q5")}
+        ${row(6,"Залруулах мэдээлэл, зааварчилгаа өгсөн үү?","Was any corrective information and instruction given to the employee(s)?","q6")}
+        ${row(7,"Үр ашиг, бүтээмжийг сайжруулах боломж байна уу?","Do the methods and practices need review for efficiency and production capability?","q7")}
+      </table>
+      <div class="print-footer"><span>SAFETY - FIRST, LAST, AND ALWAYS</span><span>Page 1 of 2</span></div>
+    </div>
+
+    <div class="official-page">
+      <table class="official-table">
+        <tr><td class="official-logo"><span>D</span>AYAN</td><td colspan="3" class="official-title">АЖЛЫН ТӨЛӨВЛӨГӨӨТ АЖИГЛАЛТ<br>PLANNED JOB OBSERVATION</td></tr>
+        <tr class="official-grey"><td colspan="4">АЖИГЛАЛТУУДЫН ҮРГЭЛЖЛЭЛ / OBSERVATIONS CONTINUED</td></tr>
+      </table>
+      <table class="official-table">
+        ${row(8,"Аюулгүй ажиллагааг сайжруулахын тулд юуг өөрчлөх шаардлагатай вэ?","What should we consider changing in the interest of safety? Ask employee(s) for input.","q8",false,62)}
+        ${row(9,"Нэмэлт санал/ажиглалт","Additional comments / observations.","q9",false,62)}
+        ${row(10,"Журмыг шинэчлэх шаардлагатай юу?","Do procedures need to be revised? If yes, how?","q10",true,52)}
+        <tr>
+          <td colspan="2"><b>Ажиглалтын хугацаа / Duration of observation</b><br>${e40safe(d.pjo_duration)}</td>
+          <td><b>Эхлэх / Start</b><br>${e40safe(d.pjo_start_time)}</td>
+          <td><b>Дуусах / Stop</b><br>${e40safe(d.pjo_stop_time)}</td>
+        </tr>
+        <tr>
+          <td colspan="2"><b>Дараах мөрдөх зөвлөмж / Recommended follow-up</b><br>${e40safe(d.pjo_followup)}</td>
+          <td><b>Хариуцах эзэн / Responsible person</b><br>${e40safe(d.pjo_responsible)}</td>
+          <td><b>Дуусах огноо / Due date</b><br>${e40safe(d.pjo_due_date)}</td>
+        </tr>
+      </table>
+      ${consider}
+      <table class="official-table" style="margin-top:12px;border:0">
+        <tr><td style="border:0;text-align:center"><div class="print-line">${e40safe(d.pjo_emp1_name)}</div>Worker #1 Name</td><td style="border:0;text-align:center"><div class="print-line">${e40sig(d,"pjo_sig_emp1")}</div>Worker #1 Signature</td></tr>
+        <tr><td style="border:0;text-align:center"><div class="print-line">${e40safe(d.pjo_emp2_name)}</div>Worker #2 Name</td><td style="border:0;text-align:center"><div class="print-line">${e40sig(d,"pjo_sig_emp2")}</div>Worker #2 Signature</td></tr>
+        <tr><td style="border:0;text-align:center"><div class="print-line">${e40safe(d.pjo_observer)}</div>Observer / Crew Trainer Name</td><td style="border:0;text-align:center"><div class="print-line">${e40sig(d,"pjo_sig_observer")}</div>Observer / Crew Trainer Signature</td></tr>
+        <tr><td style="border:0;text-align:center"><div class="print-line">${e40safe(d.pjo_supervisor)}</div>Supervisor Name</td><td style="border:0;text-align:center"><div class="print-line">${e40sig(d,"pjo_sig_supervisor")}</div>Supervisor Signature</td></tr>
+        <tr><td style="border:0;text-align:center"><div class="print-line"></div>Superintendent / Area Manager Name</td><td style="border:0;text-align:center"><div class="print-line">${e40sig(d,"pjo_sig_manager")}</div>Superintendent / Area Manager Signature</td></tr>
+        <tr><td style="border:0;text-align:center"><div class="print-line"></div>Safety Coordinator Name</td><td style="border:0;text-align:center"><div class="print-line">${e40sig(d,"pjo_sig_safety")}</div>Safety Coordinator Signature</td></tr>
+      </table>
+      <div class="print-footer"><span>SAFETY - FIRST, LAST, AND ALWAYS</span><span>Page 2 of 2</span></div>
+    </div>
+  </div>`;
+}
+
+function buildSCCPrintHTML(f){
+  const d = f.data || {};
+  return `
+  <div class="official-print-root">
+    <div class="official-page">
+      <table class="official-table">
+        <tr>
+          <td style="border:0;width:22%" class="official-logo"><span>D</span>AYAN</td>
+          <td colspan="3" style="border:0" class="official-title">АЮУЛГҮЙ АЖИЛЛАГААНЫ ШАТАЛСАН КӨҮЧИНГ/<br>SAFETY CASCADING COACHING</td>
+        </tr>
+        <tr class="official-light">
+          <td><b>Огноо / Date</b><br>${e40safe(d.scc_date)}</td>
+          <td><b>Нэр / Name</b></td>
+          <td><b>Гарын үсэг / Signature</b></td>
+          <td><b>Албан тушаал / Job title</b><br>${e40safe(d.scc_job_title)}</td>
+        </tr>
+        <tr><td><b>Суралцагчийн нэр / Name of Learner</b></td><td>${e40safe(d.scc_learner)}</td><td>${e40sig(d,"scc_sig_learner")}</td><td></td></tr>
+        <tr><td><b>I көүчийн нэр / Name of Coach #1</b></td><td>${e40safe(d.scc_coach1)}</td><td>${e40sig(d,"scc_sig_coach1")}</td><td></td></tr>
+        <tr><td><b>II көүчийн нэр / Name of Coach #2</b></td><td>${e40safe(d.scc_coach2)}</td><td>${e40sig(d,"scc_sig_coach2")}</td><td></td></tr>
+        <tr><td><b>Хэлтэс / Department<br>Багийн нэр / Team Name</b></td><td colspan="3">${e40safe(d.scc_department)} ${e40safe(d.scc_team)}</td></tr>
+        <tr class="official-grey"><td colspan="4">Уулзалтын үеэр аюулгүй ажиллагааны ямар процесс явагдсан бэ? / Which safety process was conducted during the coaching session?</td></tr>
+        <tr>
+          <td>${e40cb(d.scc_process_preshift)} Ээлжийн өмнөх хурал / Pre-Shift Meeting</td>
+          <td>${e40cb(d.scc_process_discussion)} Аюулгүй ажиллагааны хэлэлцүүлэг / Safety Discussion</td>
+          <td>${e40cb(d.scc_process_crm)} НЭУ / CRM</td>
+          <td>${e40cb(d.scc_process_ptha)} Ажлын өмнөх аюул эрсдэлийн үнэлгээ / Pre-Task Hazard Assessment<br>${e40cb(d.scc_process_other)} Бусад / Other: ${e40safe(d.scc_process_other_text)}</td>
+        </tr>
+        <tr class="official-grey"><td colspan="4">Ахлах ажилтан, таны хувьд дээрхээс аль процесс нь сайн явагдсан бэ? / Supervisor, what went well?</td></tr>
+        <tr><td colspan="4" style="height:150px">${e40safe(d.scc_self_went_well)}</td></tr>
+        <tr class="official-grey"><td colspan="4">Ахлах ажилтан өөртөө анализ хийх / Supervisor Self-analysis: Identify 1-2 opportunities from the items above.</td></tr>
+        <tr><td colspan="4" style="height:150px">${e40safe(d.scc_self_improvements)}</td></tr>
+      </table>
+      <div class="print-footer"><span></span><span>Page 1 of 2</span></div>
+    </div>
+
+    <div class="official-page">
+      <table class="official-table">
+        <tr>
+          <td style="border:0;width:22%" class="official-logo"><span>D</span>AYAN</td>
+          <td colspan="3" style="border:0" class="official-title">АЮУЛГҮЙ АЖИЛЛАГААНЫ ШАТАЛСАН КӨҮЧИНГ/<br>SAFETY CASCADING COACHING</td>
+        </tr>
+        <tr class="official-grey"><td colspan="4">I КӨҮЧИЙН ХЭЛЭЛЦҮҮЛЭГ / 1 COACHING DISCUSSION:</td></tr>
+        <tr><td colspan="4">Суралцагчаас өөрийн удирдсан аюулгүй ажиллагааны процессийн талаар санал бодлыг асуу. / Ask the Learner to self-reflect and provide feedback on the safety process.</td></tr>
+        <tr><td colspan="4" style="height:155px">${e40safe(d.scc_discussion1)}</td></tr>
+        <tr><td colspan="4"><b>COACH:</b> Цаашид юуг сайжруулах вэ? / What may the learner do in the future to become even better?</td></tr>
+        <tr><td colspan="4" style="height:95px">${e40safe(d.scc_discussion1_improve)}</td></tr>
+        <tr class="official-grey"><td colspan="4">II КӨҮЧИЙН ХЭЛЭЛЦҮҮЛЭГ / 2 COACHING DISCUSSION:</td></tr>
+        <tr><td colspan="4">I көүчийн өгсөн зөвлөмжийг бататгаж нэмэлт санал өгнө. / Reinforce Coach #1 and provide additional feedback.</td></tr>
+        <tr><td colspan="4" style="height:135px">${e40safe(d.scc_discussion2)}</td></tr>
+        <tr class="official-grey"><td colspan="4">КӨҮЧИНГИЙН ДҮГНЭЛТ / SUMMARIZE COACHING SESSION:</td></tr>
+        <tr><td colspan="4">I көүч нь яриаг нэгтгэн дүгнэж, сайжруулах ажлуудыг тохирно. / Coach #1 summarizes the conversation and agrees on key improvement actions.</td></tr>
+        <tr><td colspan="4" style="height:140px">${e40safe(d.scc_summary)}<br><br><b>Key actions:</b><br>${e40safe(d.scc_actions)}</td></tr>
+      </table>
+      <div class="print-footer"><span></span><span>Page 2 of 2</span></div>
+    </div>
+  </div>`;
+}
+
+function printHTML(title,content){
+  const win = window.open("", "_blank");
+  if(!win) return alert("Popup blocked. Allow popups for this site.");
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${e40safe(title)}</title><style>
+    body{font-family:Arial,"Noto Sans",sans-serif;margin:0;color:#000;background:white}
+    .official-page{box-sizing:border-box;width:100%;min-height:calc(297mm - 14mm);page-break-after:always}
+    .official-page:last-child{page-break-after:auto}
+    .official-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9.6px;line-height:1.12;color:#000}
+    .official-table td,.official-table th{border:1px solid #111;padding:3px;vertical-align:top;word-wrap:break-word}
+    .official-title{text-align:center;font-weight:900;font-size:16px}.official-logo{font-size:24px;font-weight:900;color:#1e3a8a}.official-logo span{color:#991b1b}
+    .official-grey{background:#6f6f6f!important;color:#fff!important;font-weight:900;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .official-light{background:#e5e5e5!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .official-check{font-size:13px;font-weight:900}.print-signature-img{max-width:180px;max-height:45px}.print-line{border-bottom:1px solid #111;height:34px;text-align:center}
+    .print-footer{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:10px;font-weight:900}
+    @media print{@page{size:A4 portrait;margin:7mm}body{margin:0!important;background:white!important}}
+  </style></head><body>${content}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>win.print(),500);
+}
+
+function printCurrentForm(){
+  const type=document.getElementById("formType")?.value||"pjo";
+  const title=document.getElementById("formType")?.selectedOptions[0]?.textContent||"Form";
+  const f={type,title,data:collectCurrentForm ? collectCurrentForm() : {}};
+  const content=type==="cascaded"?buildSCCPrintHTML(f):buildPJOPrintHTML(f);
+  printHTML(title,content);
+}
+
+function printSingleSavedForm(id){
+  const f=(savedForms||[]).find(x=>String(x.id)===String(id));
+  if(!f) return alert("Document not found.");
+  const content=f.type==="cascaded"?buildSCCPrintHTML(f):buildPJOPrintHTML(f);
+  printHTML(f.doc_number||f.title||"Document",content);
 }
