@@ -1,10 +1,10 @@
 {
   "name": "UDS Development Pro Enterprise",
   "short_name": "UDS Pro",
-  "start_url": "./index.html?enterprise=3.2",
+  "start_url": "./index.html?enterprise=3.3",
   "display": "standalone",
   "background_color": "#edf2f7",
   "theme_color": "#0b1220",
-  "description": "UDS Development Pro Enterprise 3.2 Admin View-As Fix.",
+  "description": "UDS Development Pro Enterprise 3.3 Role Scope Buttons.",
   "icons": []
 }
