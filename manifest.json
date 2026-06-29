@@ -1,10 +1,10 @@
 {
   "name": "UDS Development Pro Enterprise",
   "short_name": "UDS Pro",
-  "start_url": "./index.html?enterprise=5.5",
+  "start_url": "./index.html?enterprise=6.0",
   "display": "standalone",
   "background_color": "#edf2f7",
   "theme_color": "#0b1220",
-  "description": "UDS Development Pro Enterprise 5.5 Forms and Records Cleanup.",
+  "description": "UDS Development Pro Enterprise 6.0 Production Foundation.",
   "icons": []
 }
