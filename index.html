@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro Enterprise 6.0</title>
+<title>UDS Development Pro Enterprise 4.0 RC1</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=6.0">
+<link rel="stylesheet" href="style.css?v=4.0rc1">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -41,7 +41,7 @@
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">Enterprise 6.0 • production foundation</p>
+    <p id="syncStatus">Enterprise 4.0 RC1 • official forms engine</p>
   </div>
   <div class="header-actions">
     <span id="currentUserEmail">Not signed in</span>
@@ -57,7 +57,7 @@
   <button data-tab="forms">Forms</button>
   <button data-tab="map">Map</button>
   <button data-tab="ai">AI</button>
-  <button data-tab="documents">Records</button>
+  <button data-tab="documents">Docs</button>
 </nav>
 
 <main>
@@ -209,27 +209,11 @@
 </section>
 
 
-
-<section id="adminUsersRoles" class="tab">
-  <div class="section-title"><h2>Users / Roles</h2><p>Admin access — users and role tools</p></div>
-  <div id="usersRolesPanel"></div>
-</section>
-<section id="databaseHealth" class="tab">
-  <div class="section-title"><h2>Database Health</h2><p>Connection, counts and app status</p></div>
-  <div id="databaseHealthPanel"></div>
-</section>
-<section id="allRecords" class="tab">
-  <div class="section-title"><h2>All Records</h2><p>Search entries, forms and actions</p></div>
-  <div class="form-card"><label>Search Records<input id="allRecordsSearch" placeholder="Search..." oninput="renderAllRecords()"></label></div>
-  <div id="allRecordsPanel"></div>
-</section>
-
 <section id="documents" class="tab">
   <div class="section-title">
     <h2>Document Centre</h2>
-    <p>Stable register for saved forms and official records</p>
+    <p>Official bilingual forms, document numbers, signatures and print records</p>
   </div>
-
   <div class="form-card">
     <div class="quick">
       <button type="button" onclick="showTab('forms')">Create New Form</button>
@@ -237,7 +221,6 @@
       <button type="button" class="secondary" onclick="printDocumentRegister()">Print Register</button>
     </div>
   </div>
-
   <div id="documentCentreList"></div>
 </section>
 
@@ -429,8 +412,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=6.0"></script>
-<script src="app.js?v=6.0"></script>
+<script src="config.js?v=4.0rc1"></script>
+<script src="app.js?v=4.0rc1"></script>
 
 <div id="signatureModal" class="signature-modal hidden">
   <div class="signature-card">
