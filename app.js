@@ -181,7 +181,7 @@ let savedForms=JSON.parse(localStorage.getItem("uds_enterprise_forms")||"[]");
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();applyLanguage();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=4.0b3")};
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();applyLanguage();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=4.0b4")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="entriesRegister")renderEntriesRegister();if(id==="forms"){renderSelectedForm();renderSavedForms();}if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
@@ -358,7 +358,7 @@ async function saveEntry(){if(!canWrite()){alert("Viewer role is read-only.");re
 function saveAction(){if(!canWrite()){alert("Viewer role is read-only.");return;}let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 4.0 Build 3",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 4.0 Build 4",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
@@ -2384,3 +2384,154 @@ function buildSCCPrintHTML(f){
 
 const b3OldShowTab=typeof showTab==="function"?showTab:null;
 if(b3OldShowTab){showTab=function(id){b3OldShowTab(id);if(id==="adminUsersRoles")renderUsersRoles();if(id==="databaseHealth")renderDatabaseHealth();if(id==="allRecords")renderAllRecords();if(id==="documents"&&typeof renderDocumentCentre==="function")renderDocumentCentre();}}
+
+
+
+/* Enterprise 4.0 Build 4 - Cascaded Coaching bullet and alignment print fix */
+function b4safe(x){
+  return typeof esc==="function" ? esc(x||"") : String(x||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function b4cb(v){return v?"☑":"☐";}
+function b4sig(d,k){return d&&d[k]?`<img class="print-signature-img" src="${d[k]}">`:"";}
+
+function b4Bullets(text){
+  text = String(text || "").trim();
+  if(!text) return "";
+  let lines = text
+    .split(/\n+/)
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(s => s.replace(/^[-•*\u2022]\s*/, "").trim())
+    .filter(Boolean);
+
+  // If user typed sentences in one paragraph, keep paragraph unless obvious semicolon list
+  if(lines.length === 1 && lines[0].includes(";")){
+    lines = lines[0].split(";").map(s=>s.trim()).filter(Boolean);
+  }
+
+  if(lines.length <= 1){
+    return `<div class="single-answer">${b4safe(lines[0] || text)}</div>`;
+  }
+  return `<ul>${lines.map(s=>`<li>${b4safe(s)}</li>`).join("")}</ul>`;
+}
+
+function buildSCCPrintHTML(f){
+  const d=f.data||{}, learnerJob=d.scc_learner_job_title||d.scc_job_title||"";
+  return `
+  <div class="official-print-root">
+    <div class="official-page">
+      <table class="official-table">
+        <tr>
+          <td style="border:0;width:22%" class="official-logo"><span>D</span>AYAN</td>
+          <td colspan="3" style="border:0" class="official-title">АЮУЛГҮЙ АЖИЛЛАГААНЫ ШАТАЛСАН КӨҮЧИНГ/<br>SAFETY CASCADING COACHING</td>
+        </tr>
+        <tr class="official-light">
+          <td><b>Огноо/ Date</b><br>${b4safe(d.scc_date)}</td>
+          <td><b>Нэр/ Name</b></td>
+          <td><b>Гарын үсэг/ Signature</b></td>
+          <td><b>Албан тушаал/ Job title</b></td>
+        </tr>
+        <tr>
+          <td><b>Суралцагчийн нэр/<br>Name of Learner</b></td>
+          <td class="scc-header-answer">${b4safe(d.scc_learner)}</td>
+          <td class="scc-header-answer">${b4sig(d,"scc_sig_learner")}</td>
+          <td class="scc-header-answer">${b4safe(learnerJob)}</td>
+        </tr>
+        <tr>
+          <td><b>I көүчийн нэр/<br>Name of Coach #1</b></td>
+          <td class="scc-header-answer">${b4safe(d.scc_coach1)}</td>
+          <td class="scc-header-answer">${b4sig(d,"scc_sig_coach1")}</td>
+          <td class="scc-header-answer">${b4safe(d.scc_coach1_job_title)}</td>
+        </tr>
+        <tr>
+          <td><b>II көүчийн нэр/<br>Name of Coach #2</b></td>
+          <td class="scc-header-answer">${b4safe(d.scc_coach2)}</td>
+          <td class="scc-header-answer">${b4sig(d,"scc_sig_coach2")}</td>
+          <td class="scc-header-answer">${b4safe(d.scc_coach2_job_title)}</td>
+        </tr>
+        <tr>
+          <td><b>Хэлтэс/ Department<br>Багийн нэр/ Team Name</b></td>
+          <td colspan="3" class="scc-header-answer">${b4safe(d.scc_department)} ${b4safe(d.scc_team)}</td>
+        </tr>
+      </table>
+
+      <table class="official-table" style="margin-top:12px">
+        <tr class="official-grey">
+          <td colspan="5">Уулзалтын үеэр аюулгүй ажиллагааны ямар процесс явагдсан бэ? (Холбогдох нүдийг чагталж эсвэл тайлбарлаж бич)<br>
+          Which safety process was conducted during the coaching session? (Mark a box or write in)</td>
+        </tr>
+        <tr>
+          <td>${b4cb(d.scc_process_preshift)} Ээлжийн өмнөх хурал/<br>Pre-Shift Meeting:</td>
+          <td>${b4cb(d.scc_process_discussion)} Аюулгүй ажиллагааны хэлэлцүүлэг/<br>Safety Discussion:</td>
+          <td>${b4cb(d.scc_process_crm)} НЭУ/ CRM:</td>
+          <td>${b4cb(d.scc_process_ptha)} Ажлын өмнөх аюул эрсдэлийн үнэлгээ/<br>Pre-Task Hazard Assessment:</td>
+          <td>${b4cb(d.scc_process_other)} Бусад/ Other:<br>${b4safe(d.scc_process_other_text)}</td>
+        </tr>
+        <tr class="official-grey">
+          <td colspan="5">Ахлах ажилтан, таны хувьд дээрхээс аль процесс нь сайн явагдсан бэ? Үүний дараа “Уулзалтын үеэр аль нь буюу ямар үйл явц нь сайн явагдсан бэ?” гэж өөрөөсөө асуу. (Сайн явагдсан 3-4 зүйлийг тодорхойлж бич)<br>
+          Supervisor, what went well? Upon completion of the Safety Process, ask yourself: “What key elements or behaviors do you believe went well during the safety process?” (Write below 3-4 self-feedback items which went well)</td>
+        </tr>
+        <tr><td colspan="5" class="answer-cell" style="height:155px">${b4Bullets(d.scc_self_went_well)}</td></tr>
+        <tr class="official-grey">
+          <td colspan="5">Ахлах ажилтан, өөртөө анализ хийх: Дээрхээс өөрөөр юу илүү сайн байх боломж байсныг 1-2 жишээгээр тодорхойлж бич. Аюулгүй ажиллагааны процессыг сайжруулахын тулд цаашдаа юуг өөрчлөхөөр байна, юуг өөрөөр хийхээр байгаагаа тодорхойлж бич. (Санал болгох 1-2 сайжруулалтыг бич)<br>
+          Supervisor, Self-analysis: Identify 1-2 opportunities within What Went Well items above, which could be even better if something were done differently. Write below what would you change, or do differently in the future during similar safety processes to be even better? (Write below 1-2 suggested improvements)</td>
+        </tr>
+        <tr><td colspan="5" class="answer-cell" style="height:160px">${b4Bullets(d.scc_self_improvements)}</td></tr>
+      </table>
+      <div class="print-footer"><span></span><span>Page 1 of 2</span></div>
+    </div>
+
+    <div class="official-page">
+      <table class="official-table">
+        <tr>
+          <td style="border:0;width:22%" class="official-logo"><span>D</span>AYAN</td>
+          <td colspan="3" style="border:0" class="official-title">АЮУЛГҮЙ АЖИЛЛАГААНЫ ШАТАЛСАН КӨҮЧИНГ/<br>SAFETY CASCADING COACHING</td>
+        </tr>
+      </table>
+
+      <table class="official-table" style="margin-top:12px">
+        <tr class="official-grey"><td>I КӨҮЧИЙН ХЭЛЭЛЦҮҮЛЭГ/ 1 COACHING DISCUSSION:</td></tr>
+        <tr><td>Суралцагчаас өөрийн удирдаж явуулсан процессийн талаар санал бодлыг нь асуу. “Таны удирдаж явуулсан процесс ямар явагдсан гэж бодож байна?” эсвэл “Үүний аль хэсэг нь сайн явагдсан гэж бодож байна?” гэж асууна. Көүч нь суралцагчийн сайн явуулсан процесс дээр эерэг үнэлгээ өгнө. (Сайн явагдсан 3-4 зүйлийг тодорхойлж бич)<br>Ask the Learner to self-reflect and provide feedback on the safety process which they delivered. Ask: “How do you think that went?” or “What went well for you during that?” The Coach then provides positive feedback to the Learner on what went well. <br><i>(Write below 3-4 items which went well)</i></td></tr>
+        <tr><td class="answer-cell" style="height:145px">${b4Bullets(d.scc_discussion1)}</td></tr>
+        <tr><td><b>КӨҮЧ:</b> Уг СУРАЛЦАГЧИЙГ энэ төрлийн аюулгүй ажиллагааны процессыг илүү сайн болгохын тулд юу хийвэл дээр гэж та бодож байна? (Санал болгох 1-2 сайжруулалт бич)<br><b>COACH:</b> What do you think the LEARNER may do in the future to become even better in this type of safety process? <br><i>(Write 1-2 suggested improvements below)</i></td></tr>
+        <tr><td class="answer-cell" style="height:95px">${b4Bullets(d.scc_discussion1_improve)}</td></tr>
+      </table>
+
+      <table class="official-table" style="margin-top:24px">
+        <tr class="official-grey"><td>II КӨҮЧИЙН ХЭЛЭЛЦҮҮЛЭГ/ 2 COACHING DISCUSSION:</td></tr>
+        <tr><td>I көүчийн өгсөн зөвлөмжийг дахин хэрэгжүүлж, юу сайн болсон талаар нэмэлт санал бодлоо хуваалцах шаардлагатай бол сайжруулах боломжийг өөрийн зүгээс өг. (Сайжруулалт хийх боломжит зүйлсийг бич)<br>Re-enforce the coaching provided by Coach #1, provide additional feedback on what went well and if appropriate an improvement opportunity from your perspective. <i>(Write improvement opportunity below)</i></td></tr>
+        <tr><td class="answer-cell" style="height:145px">${b4Bullets(d.scc_discussion2)}</td></tr>
+        <tr class="official-grey"><td>КӨҮЧИНГ ХЭЛЭЛЦҮҮЛГИЙН ДҮГНЭЛТ/ SUMMARIZE COACHING SESSION:</td></tr>
+        <tr><td>I көүч нь суралцагчтай хийсэн ярилцлагаа нэгтгэн дүгнэж, цаашдаа аюулгүй ажиллагааны процесс дээр сайжруулалт хийхэд авах гол арга хэмжээний талаар ярилцаж тохирно. (Сайжруулалт хийхэд авах гол арга хэмжээг бич)<br>Coach #1 summarizes the conversation with the Learner, and they agree on key improvement actions to be undertaken during future safety processes. <i>(Write key improvement actions below)</i></td></tr>
+        <tr><td class="answer-cell" style="height:140px">${b4Bullets((d.scc_summary||"") + "\\n" + (d.scc_actions||""))}</td></tr>
+      </table>
+      <div class="print-footer"><span></span><span>Page 2 of 2</span></div>
+    </div>
+  </div>`;
+}
+
+// Override print HTML to include Build 4 answer formatting in print window
+function printHTML(title,content){
+  const win=window.open("","_blank");
+  if(!win) return alert("Popup blocked. Allow popups for this site.");
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${b4safe(title)}</title><style>
+    body{font-family:Arial,"Noto Sans",sans-serif;margin:0;color:#000;background:white}
+    .official-page{box-sizing:border-box;width:100%;min-height:calc(297mm - 14mm);page-break-after:always}
+    .official-page:last-child{page-break-after:auto}
+    .official-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9.6px;line-height:1.12;color:#000}
+    .official-table td,.official-table th{border:1px solid #111;padding:3px;vertical-align:top;word-wrap:break-word}
+    .official-title{text-align:center;font-weight:900;font-size:16px}
+    .official-logo{font-size:24px;font-weight:900;color:#1e3a8a}.official-logo span{color:#991b1b}
+    .official-grey{background:#6f6f6f!important;color:#fff!important;font-weight:900;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .official-light{background:#e5e5e5!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .print-signature-img{max-width:180px;max-height:45px}
+    .print-footer{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:10px;font-weight:900}
+    .answer-cell{font-size:12px;font-weight:700;line-height:1.45;vertical-align:middle!important;padding:10px 14px!important}
+    .answer-cell ul{margin:0;padding-left:24px}.answer-cell li{margin:5px 0}.answer-cell .single-answer{text-align:center}
+    .scc-header-answer{font-size:12px;font-weight:700;text-align:center;vertical-align:middle!important}
+    @media print{@page{size:A4 portrait;margin:7mm}body{margin:0!important;background:white!important}}
+  </style></head><body>${content}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>win.print(),500);
+}

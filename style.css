@@ -854,3 +854,28 @@ button.secondary{background:#475569}button.success{background:#16a34a}button.dan
 .console-button{display:block;width:100%;text-align:left;background:#f8fafc;border:1px solid #cbd5e1;border-radius:14px;padding:14px;color:#172033;font-weight:900}
 .console-button span{display:block;color:#64748b;font-size:13px;margin-top:4px}
 @media(min-width:760px){.console-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* Enterprise 4.0 Build 4 - Cascaded Coaching answer alignment */
+.answer-cell{
+  font-size:12px;
+  font-weight:700;
+  line-height:1.45;
+  vertical-align:middle!important;
+  padding:10px 14px!important;
+}
+.answer-cell ul{
+  margin:0;
+  padding-left:24px;
+}
+.answer-cell li{
+  margin:5px 0;
+}
+.answer-cell.single-answer{
+  text-align:center;
+}
+.scc-header-answer{
+  font-size:12px;
+  font-weight:700;
+  text-align:center;
+  vertical-align:middle!important;
+}
