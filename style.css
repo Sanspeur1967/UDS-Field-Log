@@ -880,9 +880,40 @@ button.secondary{background:#475569}button.success{background:#16a34a}button.dan
   vertical-align:middle!important;
 }
 
-/* Enterprise 5.0 - Smart Forms Engine */
-.smart-form-status{position:sticky;top:0;z-index:50;background:#ecfeff;border:1px solid #67e8f9;color:#155e75;border-radius:12px;padding:8px 12px;margin:8px 0;font-weight:900;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.smart-textarea{overflow:hidden!important;resize:none!important;min-height:92px;line-height:1.35}
-.smart-answer,.answer-cell{font-size:12px!important;font-weight:700!important;line-height:1.42!important;padding:10px 14px!important;vertical-align:top!important;white-space:normal!important}
-.smart-answer ul,.answer-cell ul{margin:0;padding-left:24px}.smart-answer li,.answer-cell li{margin:4px 0;break-inside:avoid}.single-answer{text-align:left}.smart-section{break-inside:avoid;page-break-inside:avoid}.smart-continuation{page-break-before:always}
-@media print{.smart-form-status{display:none!important}.smart-section{break-inside:avoid;page-break-inside:avoid}}
+/* Enterprise 5.1 - Forms, Print Preview and Logo Fix */
+.form-template textarea{
+  overflow:hidden;
+  resize:none;
+  min-height:92px;
+  line-height:1.35;
+}
+.print-logo-img{
+  max-width:190px;
+  max-height:58px;
+  object-fit:contain;
+}
+.print-toolbar{
+  position:sticky;
+  top:0;
+  z-index:9999;
+  background:#0f172a;
+  color:white;
+  padding:10px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+  font-family:Arial,sans-serif;
+}
+.print-toolbar button{
+  border:0;
+  border-radius:8px;
+  padding:8px 14px;
+  font-weight:900;
+  cursor:pointer;
+}
+.print-toolbar .print-main{background:#2563eb;color:white}
+.print-toolbar .print-close{background:#475569;color:white}
+@media print{
+  .print-toolbar{display:none!important}
+}
