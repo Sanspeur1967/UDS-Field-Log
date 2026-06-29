@@ -879,3 +879,10 @@ button.secondary{background:#475569}button.success{background:#16a34a}button.dan
   text-align:center;
   vertical-align:middle!important;
 }
+
+/* Enterprise 5.0 - Smart Forms Engine */
+.smart-form-status{position:sticky;top:0;z-index:50;background:#ecfeff;border:1px solid #67e8f9;color:#155e75;border-radius:12px;padding:8px 12px;margin:8px 0;font-weight:900;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.smart-textarea{overflow:hidden!important;resize:none!important;min-height:92px;line-height:1.35}
+.smart-answer,.answer-cell{font-size:12px!important;font-weight:700!important;line-height:1.42!important;padding:10px 14px!important;vertical-align:top!important;white-space:normal!important}
+.smart-answer ul,.answer-cell ul{margin:0;padding-left:24px}.smart-answer li,.answer-cell li{margin:4px 0;break-inside:avoid}.single-answer{text-align:left}.smart-section{break-inside:avoid;page-break-inside:avoid}.smart-continuation{page-break-before:always}
+@media print{.smart-form-status{display:none!important}.smart-section{break-inside:avoid;page-break-inside:avoid}}
