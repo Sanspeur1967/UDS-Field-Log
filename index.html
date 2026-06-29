@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="UDS Pro">
-<title>UDS Development Pro Enterprise 5.3</title>
+<title>UDS Development Pro Enterprise 5.4</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=5.3">
+<link rel="stylesheet" href="style.css?v=5.4">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -41,7 +41,7 @@
 <header class="app-header">
   <div>
     <h1>UDS Development Pro</h1>
-    <p id="syncStatus">Enterprise 5.3 • all forms + logo fix</p>
+    <p id="syncStatus">Enterprise 5.4 • forms engine</p>
   </div>
   <div class="header-actions">
     <span id="currentUserEmail">Not signed in</span>
@@ -250,16 +250,11 @@
   <div class="form-card">
     <label>Document Type
       <select id="formType" onchange="renderSelectedForm()">
-      <option value="pjo">Planned Job Observation</option>
-      <option value="cascaded">Safety Cascading Coaching</option>
-      <option value="lif">Leaders in the Field</option>
-      <option value="safety_coaching">Safety Coaching</option>
-      <option value="incident">Incident Investigation</option>
-      <option value="near_miss">Near Miss / Hazard Report</option>
-      <option value="equipment">Equipment Inspection</option>
-      <option value="vehicle">Vehicle Inspection</option>
-      <option value="toolbox">Toolbox Talk</option>
-    </select>
+        <option value="pjo">Planned Job Observation</option>
+        <option value="cascaded">Safety Cascading Coaching</option>
+        <option value="lif">Leaders in Field</option>
+        <option value="custom">Custom Field Form</option>
+      </select>
     </label>
 
     <div class="quick">
@@ -434,8 +429,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=5.3"></script>
-<script src="app.js?v=5.3"></script>
+<script src="config.js?v=5.4"></script>
+<script src="app.js?v=5.4"></script>
 
 <div id="signatureModal" class="signature-modal hidden">
   <div class="signature-card">
