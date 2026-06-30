@@ -1,10 +1,10 @@
 {
   "name": "UDS Development Pro Enterprise",
   "short_name": "UDS Pro",
-  "start_url": "./index.html?enterprise=5.8",
+  "start_url": "./index.html?enterprise=5.8.1",
   "display": "standalone",
   "background_color": "#edf2f7",
   "theme_color": "#0b1220",
-  "description": "UDS Development Pro Enterprise 5.8 PJO Signature Match.",
+  "description": "UDS Development Pro Enterprise 5.8.1 PJO Signature Hotfix.",
   "icons": []
 }

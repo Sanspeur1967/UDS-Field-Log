@@ -1017,3 +1017,6 @@ button.secondary{background:#475569}button.success{background:#16a34a}button.dan
 .pjo-name-label input{width:100%;box-sizing:border-box;margin-top:6px;}
 .pjo-signature-help{margin:0 0 12px 0;color:#64748b;font-weight:700;}
 @media(min-width:760px){.pjo-signature-grid{grid-template-columns:repeat(2,1fr);}}
+
+/* 5.8.1 PJO Signature Hotfix */
+#pjoSignatureSection{display:block!important;margin-top:18px}.pjo-signature-grid{display:grid;grid-template-columns:1fr;gap:14px}.pjo-signature-card{display:block!important;background:#fff;border:1px solid #cbd5e1;border-radius:18px;padding:16px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,.05)}.pjo-signature-title{font-weight:900;font-size:20px;color:#172033;margin-bottom:10px}.pjo-signature-card label{display:block;font-weight:900;margin-bottom:12px}.pjo-signature-card input{width:100%;box-sizing:border-box;margin-top:6px}.pjo-signature-card .signature-card,.pjo-signature-card .sig-card,.pjo-signature-card .signature-box{display:block!important}@media(min-width:760px){.pjo-signature-grid{grid-template-columns:repeat(2,1fr)}}
