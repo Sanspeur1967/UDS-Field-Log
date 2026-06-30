@@ -181,7 +181,7 @@ let savedForms=JSON.parse(localStorage.getItem("uds_enterprise_forms")||"[]");
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();applyLanguage();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=5.8")};
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();applyLanguage();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=5.8.2")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="entriesRegister")renderEntriesRegister();if(id==="forms"){renderSelectedForm();renderSavedForms();}if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
@@ -358,7 +358,7 @@ async function saveEntry(){if(!canWrite()){alert("Viewer role is read-only.");re
 function saveAction(){if(!canWrite()){alert("Viewer role is read-only.");return;}let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 5.8.1",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 5.8.2",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
@@ -3002,4 +3002,96 @@ function inject(){setTimeout(window.e581AddPJOSignatures,100);setTimeout(window.
 document.addEventListener('click',function(e){var b=e.target.closest('button'); if(!b)return; var txt=(b.textContent||'').toLowerCase(); var oc=b.getAttribute('onclick')||''; if(txt.indexOf('planned job')>=0||oc.indexOf('pjo')>=0) inject();},true);
 new MutationObserver(function(){var f=document.querySelector('#currentFormPrintable'); if(isPJO(f)&&!document.querySelector('#pjoSignatureSection')) inject();}).observe(document.documentElement,{childList:true,subtree:true});
 setTimeout(inject,1200);
+})();
+
+
+/* Enterprise 5.8.2 - PJO Sign Button Fix
+   Replaces PJO typed-only signature boxes with the same Sign/Clear pad used by Cascaded Coaching. */
+(function(){
+  function esc2(x){return String(x||'').replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function labelToNameId(sigId){return sigId.replace('pjo_sig_','pjo_name_');}
+  function pjoSigCard(label, sigId){
+    var nameId = labelToNameId(sigId);
+    var sigHtml = (typeof window.sigField === 'function') ? window.sigField(label, sigId) :
+      '<div class="signature-box"><input type="hidden" id="'+sigId+'"><div class="signature-preview" id="'+sigId+'_preview">No signature captured</div><div class="signature-btn-row"><button type="button" onclick="openSignaturePad(\''+sigId+'\',\''+esc2(label)+'\')">Sign</button><button type="button" class="secondary" onclick="document.getElementById(\''+sigId+'\').value=\'\';document.getElementById(\''+sigId+'_preview\').innerHTML=\'No signature captured\';">Clear</button></div></div>';
+    return '<div class="pjo-live-signature-card"><div class="pjo-live-signature-title">'+esc2(label)+'</div><label>Typed Name / Нэр<input type="text" id="'+nameId+'" placeholder="Type name here"></label>'+sigHtml+'</div>';
+  }
+  function buildPjoSigSection(){
+    return '<div class="form-section pjo-live-signature-section" id="pjoSignatureSection"><h3>Signatures / Гарын үсэг</h3><p>Type the name first, then tap <b>Sign</b>. Use Apple Pencil or finger.</p><div class="pjo-live-signature-grid">'+
+      pjoSigCard('Employee #1 Name / Signature','pjo_sig_emp1')+
+      pjoSigCard('Employee #2 Name / Signature','pjo_sig_emp2')+
+      pjoSigCard('Observer / Crew Trainer','pjo_sig_observer')+
+      pjoSigCard('Supervisor','pjo_sig_supervisor')+
+      pjoSigCard('Superintendent / Area Manager','pjo_sig_manager')+
+      pjoSigCard('Safety Coordinator','pjo_sig_safety')+
+      '</div></div>';
+  }
+  function isPJOOpen(){
+    var form=document.querySelector('#currentFormPrintable');
+    if(!form) return false;
+    var txt=(form.textContent||'').toLowerCase();
+    return txt.indexOf('planned job observation')>=0 || !!form.querySelector('[id^="pjo_"]');
+  }
+  window.e582FixPJOSignatures=function(){
+    var form=document.querySelector('#currentFormPrintable');
+    if(!form || !isPJOOpen()) return false;
+    // Remove old typed-only signature section and old hotfix sections.
+    Array.from(form.querySelectorAll('#pjoSignatureSection')).forEach(function(x){x.remove();});
+    Array.from(form.querySelectorAll('.form-section')).forEach(function(sec){
+      var t=(sec.textContent||'').toLowerCase();
+      if(t.indexOf('employee #1 name / signature')>=0 && t.indexOf('type name / signed')>=0) sec.remove();
+      if(t.trim()==='signatures') sec.remove();
+    });
+    var saveBtn=form.querySelector('.save-btn, button[onclick*="saveFillableForm"]');
+    if(saveBtn && saveBtn.parentElement) saveBtn.parentElement.insertAdjacentHTML('beforebegin', buildPjoSigSection());
+    else form.insertAdjacentHTML('beforeend', buildPjoSigSection());
+    return true;
+  };
+  // Override the original PJO sig() helper so future PJO renders contain real sign buttons.
+  try{
+    window.sig=function(label,id){ return pjoSigCard(label,id); };
+    sig=window.sig;
+  }catch(e){}
+  var oldRenderPJO=window.renderPJOForm;
+  if(typeof oldRenderPJO==='function'){
+    window.renderPJOForm=function(){ oldRenderPJO(); setTimeout(window.e582FixPJOSignatures,50); setTimeout(window.e582FixPJOSignatures,250); };
+    try{renderPJOForm=window.renderPJOForm;}catch(e){}
+  }
+  var oldE56=window.e56OpenForm;
+  if(typeof oldE56==='function'){
+    window.e56OpenForm=function(type){ oldE56(type); if(type==='pjo'){setTimeout(window.e582FixPJOSignatures,80);setTimeout(window.e582FixPJOSignatures,400);} };
+  }
+  var oldSelected=window.renderSelectedForm;
+  if(typeof oldSelected==='function'){
+    window.renderSelectedForm=function(){ oldSelected(); setTimeout(window.e582FixPJOSignatures,100); setTimeout(window.e582FixPJOSignatures,400); };
+  }
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    var s=((b.textContent||'')+' '+(b.getAttribute('onclick')||'')+' '+(b.getAttribute('data-form')||'')).toLowerCase();
+    if(s.indexOf('pjo')>=0 || s.indexOf('planned job observation')>=0) {setTimeout(window.e582FixPJOSignatures,150); setTimeout(window.e582FixPJOSignatures,600);}
+  },true);
+  setTimeout(window.e582FixPJOSignatures,1000);
+})();
+
+
+/* Enterprise 5.8.2 - PJO signature print support */
+(function(){
+  function safe(x){return String(x||'').replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function sigPrint(d,nameKey,sigKey){
+    var name=safe(d[nameKey]||''); var sig=d[sigKey]||'';
+    var img = (typeof sig==='string' && sig.indexOf('data:image')===0) ? '<br><img class="print-signature-img" src="'+sig+'">' : '<br>'+safe(sig);
+    return '<b>'+name+'</b>'+img;
+  }
+  var oldBuild=window.buildPJOPrintHTML;
+  if(typeof oldBuild==='function'){
+    window.buildPJOPrintHTML=function(f){
+      var html=oldBuild(f); var d=(f&&f.data)||{};
+      var sigRows='<tr><th colspan="3">SIGNATURES</th></tr>'+
+        '<tr><td>Employee #1<br>'+sigPrint(d,'pjo_name_emp1','pjo_sig_emp1')+'</td><td>Employee #2<br>'+sigPrint(d,'pjo_name_emp2','pjo_sig_emp2')+'</td><td>Observer / Crew Trainer<br>'+sigPrint(d,'pjo_name_observer','pjo_sig_observer')+'</td></tr>'+
+        '<tr><td>Supervisor<br>'+sigPrint(d,'pjo_name_supervisor','pjo_sig_supervisor')+'</td><td>Superintendent / Area Manager<br>'+sigPrint(d,'pjo_name_manager','pjo_sig_manager')+'</td><td>Safety Coordinator<br>'+sigPrint(d,'pjo_name_safety','pjo_sig_safety')+'</td></tr>';
+      html=html.replace(/<tr><th colspan="3">SIGNATURES<\/th><\/tr>[\s\S]*?<tr><td colspan="3"><b>General Notes:<\/b>/, sigRows+'<tr><td colspan="3"><b>General Notes:</b>');
+      return html;
+    };
+    try{buildPJOPrintHTML=window.buildPJOPrintHTML;}catch(e){}
+  }
 })();
