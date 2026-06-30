@@ -1,10 +1,10 @@
 {
   "name": "UDS Development Pro Enterprise",
   "short_name": "UDS Pro",
-  "start_url": "./index.html?enterprise=5.6",
+  "start_url": "./index.html?enterprise=5.7",
   "display": "standalone",
   "background_color": "#edf2f7",
   "theme_color": "#0b1220",
-  "description": "UDS Development Pro Enterprise 5.6 Final Button Fix.",
+  "description": "UDS Development Pro Enterprise 5.7 Stability + Diagnostics.",
   "icons": []
 }
