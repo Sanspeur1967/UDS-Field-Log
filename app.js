@@ -181,7 +181,7 @@ let savedForms=JSON.parse(localStorage.getItem("uds_enterprise_forms")||"[]");
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();applyLanguage();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=5.7")};
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();applyLanguage();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=5.8")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="entriesRegister")renderEntriesRegister();if(id==="forms"){renderSelectedForm();renderSavedForms();}if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
@@ -358,7 +358,7 @@ async function saveEntry(){if(!canWrite()){alert("Viewer role is read-only.");re
 function saveAction(){if(!canWrite()){alert("Viewer role is read-only.");return;}let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 5.7",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 5.8",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
@@ -2936,3 +2936,44 @@ var e57OldShowTab=window.showTab;window.showTab=function(id){if(typeof e57OldSho
 function e57EnhanceRecords(){var sec=document.getElementById("documents");if(!sec||document.getElementById("e57RecordsFilters"))return;var search=sec.querySelector(".e56-search")||sec.querySelector(".e60-search")||sec.querySelector(".e55-records-filter");if(!search)return;var filters=document.createElement("div");filters.id="e57RecordsFilters";filters.className="e57-panel";filters.innerHTML='<h3>Record Filters</h3><div class="e57-record-filter-grid"><label>Type<select id="e57FilterType" onchange="e57ApplyRecordFilters()"><option value="">All</option><option value="pjo">PJO</option><option value="cascaded">Cascaded Coaching</option><option value="lif">LIF</option><option value="incident">Incident</option><option value="near_miss">Near Miss</option></select></label><label>Status<select id="e57FilterStatus" onchange="e57ApplyRecordFilters()"><option value="">All</option><option>Draft</option><option>Submitted</option><option>Reviewed</option><option>Approved</option><option>Closed</option></select></label><label>From<input id="e57FilterFrom" type="date" onchange="e57ApplyRecordFilters()"></label><label>To<input id="e57FilterTo" type="date" onchange="e57ApplyRecordFilters()"></label></div>';search.insertAdjacentElement("afterend",filters)}
 function e57ApplyRecordFilters(){var type=(document.getElementById("e57FilterType")||{}).value||"";var status=(document.getElementById("e57FilterStatus")||{}).value||"";var cards=document.querySelectorAll(".e56-record-card,.e60-record-card,.e55-record-card");cards.forEach(function(card){var txt=card.textContent.toLowerCase();var show=true;if(type&&txt.indexOf(type.replace("_"," "))<0&&txt.indexOf(type)<0)show=false;if(status&&txt.indexOf(status.toLowerCase())<0)show=false;card.style.display=show?"":"none"})}
 setTimeout(function(){var type=localStorage.getItem("e56_current_form")||localStorage.getItem("e57_current_form")||"";if(type==="pjo")e57AddPJOSignatures();if(document.getElementById("currentFormPrintable"))e57WireAutosave()},1000);
+
+
+
+/* Enterprise 5.8 - PJO Signature Match */
+function e58safe(x){return typeof esc==='function'?esc(x||''):String(x||'').replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+function e58PjoCard(title,nameId,sigId){
+  var sig = (typeof sigField==='function') ? sigField(title,sigId) : '<div class="signature-box"><label>'+e58safe(title)+'</label><input type="hidden" id="'+sigId+'"><div class="signature-preview" id="'+sigId+'_preview">No signature captured</div></div>';
+  return '<div class="pjo-signature-card"><div class="pjo-signature-title">'+e58safe(title)+'</div><label class="pjo-name-label">Typed Name / Нэр<input id="'+nameId+'" placeholder="Type name here"></label>'+sig+'</div>';
+}
+function e58RemoveOldPjoSigs(root){
+  if(!root) return;
+  var old=root.querySelector('#pjoSignatureSection'); if(old) old.remove();
+  ['pjo_sig_emp1','pjo_sig_emp2','pjo_sig_observer','pjo_sig_supervisor','pjo_sig_manager','pjo_sig_safety'].forEach(function(id){
+    var el=root.querySelector('#'+id); if(!el) return;
+    var box=el.closest('.pjo-signature-card,.signature-box,.form-section');
+    if(box) box.remove();
+  });
+}
+function e58AddPjoSigs(){
+  var root=document.getElementById('e56FormMount')||document.getElementById('dynamicFormArea')||document;
+  var form=root.querySelector('#currentFormPrintable'); if(!form) return;
+  e58RemoveOldPjoSigs(root);
+  var sec=document.createElement('div'); sec.className='form-section'; sec.id='pjoSignatureSection';
+  sec.innerHTML='<h3>Signatures / Гарын үсэг</h3><p class="pjo-signature-help">Type the name first, then tap Sign. Apple Pencil or finger can be used.</p><div class="pjo-signature-grid">'+
+    e58PjoCard('Worker #1 Signature','pjo_name_emp1','pjo_sig_emp1')+
+    e58PjoCard('Worker #2 Signature','pjo_name_emp2','pjo_sig_emp2')+
+    e58PjoCard('Observer / Crew Trainer Signature','pjo_name_observer','pjo_sig_observer')+
+    e58PjoCard('Supervisor Signature','pjo_name_supervisor','pjo_sig_supervisor')+
+    e58PjoCard('Superintendent / Area Manager Signature','pjo_name_manager','pjo_sig_manager')+
+    e58PjoCard('Safety Coordinator Signature','pjo_name_safety','pjo_sig_safety')+
+    '</div>';
+  var btn=form.querySelector('.save-btn');
+  if(btn&&btn.parentElement) btn.parentElement.insertAdjacentElement('beforebegin',sec); else form.appendChild(sec);
+}
+var e58Old56=window.e56OpenForm;
+if(typeof e58Old56==='function') window.e56OpenForm=function(type){e58Old56(type); if(type==='pjo') setTimeout(e58AddPjoSigs,250);};
+var e58OldRender=window.renderSelectedForm;
+if(typeof e58OldRender==='function') window.renderSelectedForm=function(){e58OldRender(); var t=localStorage.getItem('e56_current_form')||localStorage.getItem('e57_current_form')||''; if(t==='pjo') setTimeout(e58AddPjoSigs,250);};
+var e58OldPjo=window.renderPJOForm;
+if(typeof e58OldPjo==='function') window.renderPJOForm=function(){e58OldPjo(); setTimeout(e58AddPjoSigs,80);};
+setTimeout(function(){var t=localStorage.getItem('e56_current_form')||localStorage.getItem('e57_current_form')||''; if(t==='pjo'||document.querySelector('#currentFormPrintable [id^="pjo_"]')) e58AddPjoSigs();},1000);
