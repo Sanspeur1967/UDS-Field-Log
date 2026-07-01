@@ -181,7 +181,7 @@ let savedForms=JSON.parse(localStorage.getItem("uds_enterprise_forms")||"[]");
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();applyLanguage();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=5.8.2")};
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();applyLanguage();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=5.8.5")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="entriesRegister")renderEntriesRegister();if(id==="forms"){renderSelectedForm();renderSavedForms();}if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
@@ -358,8 +358,8 @@ async function saveEntry(){if(!canWrite()){alert("Viewer role is read-only.");re
 function saveAction(){if(!canWrite()){alert("Viewer role is read-only.");return;}let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 5.8.2",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
-function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Foreman: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 5.8.5",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Captain: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
 async function syncAction(a){let body={heading:a.heading,priority:a.priority,action_text:a.actionText,owner:a.owner,due_date:a.dueDate||null,status:a.status,created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_actions`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());a.cloud_id=(await r.json())[0].id;a.synced=true}
@@ -3094,4 +3094,310 @@ setTimeout(inject,1200);
     };
     try{buildPJOPrintHTML=window.buildPJOPrintHTML;}catch(e){}
   }
+})();
+
+
+
+/* Enterprise 5.8.3 Entry Save Hotfix */
+(function(){
+  function entrySec(){return document.getElementById('entry')||document.getElementById('entries')||document.querySelector('section.active')||document.querySelector('.page.active')||null;}
+  function showStatus(msg,err){var sec=entrySec()||document.body;var el=document.getElementById('e583EntrySaveStatus');if(!el){el=document.createElement('div');el.id='e583EntrySaveStatus';sec.prepend(el);}el.className='e583-save-status'+(err?' error':'');el.textContent=msg;if(!err)setTimeout(function(){if(el)el.remove();},3500);}
+  function clearIds(){try{['editingEntryId','currentEntryId','entryEditId','selectedEntryId','editingDailyEntryId'].forEach(function(k){localStorage.removeItem(k);sessionStorage.removeItem(k);});}catch(e){}}
+  function resetEntry(){var sec=entrySec();if(!sec)return;sec.querySelectorAll('input,textarea,select').forEach(function(el){if(el.type==='hidden'||el.type==='button'||el.type==='submit'||el.type==='reset')return;var id=(el.id||el.name||'').toLowerCase();if(el.type==='file'){el.value='';return;}if(id.includes('date')){try{el.value=new Date().toISOString().split('T')[0];}catch(e){}return;}if(id.includes('time')){var d=new Date();el.value=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');return;}if(el.type==='checkbox'||el.type==='radio')el.checked=false;else if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';});sec.querySelectorAll('.photo-preview,.entry-photo-preview,#photoPreview,#photosPreview').forEach(function(p){p.innerHTML='';});clearIds();}
+  window.e583NewEntry=function(){resetEntry();showStatus('Ready for next entry',false);};
+  function addButton(){var sec=entrySec();if(!sec||document.getElementById('e583EntryActions'))return;var wrap=document.createElement('div');wrap.id='e583EntryActions';wrap.className='e583-entry-actions';wrap.innerHTML='<button type="button" onclick="e583NewEntry()">New Blank Entry</button>';var btn=Array.from(sec.querySelectorAll('button')).find(function(b){return /save|submit/i.test(b.textContent||'')}); if(btn&&btn.parentElement)btn.parentElement.insertAdjacentElement('afterend',wrap);}
+  function afterSave(){setTimeout(function(){resetEntry();showStatus('Entry saved — ready for next entry',false);addButton();},500);}
+  function wrap(name){var fn=window[name];if(typeof fn!=='function'||fn.__e583)return;window[name]=function(){var r;try{r=fn.apply(this,arguments);if(r&&typeof r.then==='function')return r.then(function(v){afterSave();return v;}).catch(function(e){showStatus('Entry save error: '+(e.message||e),true);throw e;});afterSave();return r;}catch(e){showStatus('Entry save error: '+(e.message||e),true);throw e;}};window[name].__e583=true;}
+  function wire(){['saveEntry','saveDailyEntry','saveDailyLog','saveLogEntry','submitEntry','submitDailyEntry','addEntry','addDailyEntry','saveProductionEntry'].forEach(wrap);var sec=entrySec();if(!sec)return;addButton();sec.querySelectorAll('button').forEach(function(b){if(b.dataset.e583)return;var t=(b.textContent||'').toLowerCase(),o=(b.getAttribute('onclick')||'').toLowerCase();if(t.includes('save')||t.includes('submit')||o.includes('save')||o.includes('submit')){b.dataset.e583='1';b.addEventListener('click',function(){setTimeout(afterSave,900);},true);}});}
+  var old=window.showTab;if(typeof old==='function'&&!old.__e583){window.showTab=function(id){old.apply(this,arguments);setTimeout(wire,250);};window.showTab.__e583=true;}
+  document.addEventListener('click',function(e){if(e.target.closest('[data-tab]'))setTimeout(wire,300);},true);
+  document.addEventListener('DOMContentLoaded',function(){setTimeout(wire,800);});setTimeout(wire,1200);
+})();
+
+
+
+/* Enterprise 5.8.4 - Captain wording + no-AI PDF daily report */
+(function(){
+  function esc584(x){return String(x==null?'':x).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function num584(v){var n=parseFloat(v);return isNaN(n)?0:n;}
+  function allEntries584(){
+    try{ if(typeof entries!=='undefined' && Array.isArray(entries)) return entries; }catch(e){}
+    try{return JSON.parse(localStorage.getItem('uds_pro_entries')||localStorage.getItem('uds_v2_entries')||'[]')||[];}catch(e){return []}
+  }
+  function actions584(){
+    try{ if(typeof actions!=='undefined' && Array.isArray(actions)) return actions; }catch(e){}
+    try{return JSON.parse(localStorage.getItem('uds_pro_actions')||localStorage.getItem('uds_v2_actions')||'[]')||[];}catch(e){return []}
+  }
+  function today584(){return new Date().toISOString().split('T')[0];}
+  function entryDate584(e){return e.date||e.entry_date||e.createdAt?.slice(0,10)||'';}
+  function sum584(list,key){return list.reduce(function(t,e){return t+num584(e[key]);},0);}
+  function reportHTML584(date){
+    var list=allEntries584().filter(function(e){return entryDate584(e)===date;});
+    var acts=actions584().filter(function(a){return (a.status||'')!=='Closed';});
+    var metres=sum584(list,'metresAdvanced'), bolts=sum584(list,'boltsInstalled'), shot=sum584(list,'shotcreteM3'), delays=sum584(list,'delayHours');
+    var byHeading={}; list.forEach(function(e){var h=e.heading||'No heading'; (byHeading[h]=byHeading[h]||[]).push(e);});
+    var headingRows=Object.keys(byHeading).map(function(h){
+      var rows=byHeading[h].map(function(e){return '<tr><td>'+esc584(e.time||'')+'</td><td>'+esc584(e.shift||'')+'</td><td>'+esc584(e.activity||'')+'</td><td>'+esc584(e.job||'')+'</td><td>'+esc584(e.nextShift||'')+'</td><td>'+esc584(e.supervisor||'')+'</td><td>'+esc584(e.foreman||'')+'</td></tr>';}).join('');
+      return '<h3>'+esc584(h)+'</h3><table><thead><tr><th>Time</th><th>Shift</th><th>Activity</th><th>Job Performed</th><th>Next Shift</th><th>Supervisor</th><th>Captain</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    }).join('') || '<p>No entries saved for this date.</p>';
+    var actionRows=acts.slice(0,25).map(function(a){return '<tr><td>'+esc584(a.priority||'')+'</td><td>'+esc584(a.heading||'')+'</td><td>'+esc584(a.actionText||'')+'</td><td>'+esc584(a.owner||'')+'</td><td>'+esc584(a.dueDate||'')+'</td><td>'+esc584(a.status||'')+'</td></tr>';}).join('') || '<tr><td colspan="6">No open actions.</td></tr>';
+    return '<div class="report"><h1>UDS Daily Development Report</h1><p><b>Date:</b> '+esc584(date)+' &nbsp; <b>Generated:</b> '+esc584(new Date().toLocaleString())+'</p><div class="summary"><div><b>'+list.length+'</b><br>Entries</div><div><b>'+metres.toFixed(1)+'</b><br>Metres</div><div><b>'+bolts+'</b><br>Bolts</div><div><b>'+shot.toFixed(1)+'</b><br>Shotcrete m3</div><div><b>'+delays.toFixed(1)+'</b><br>Delay hrs</div><div><b>'+acts.length+'</b><br>Open actions</div></div><h2>Work Completed</h2>'+headingRows+'<h2>Open Actions</h2><table><thead><tr><th>Priority</th><th>Heading</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody>'+actionRows+'</tbody></table><h2>Supervisor Notes</h2><div class="notes"></div></div>';
+  }
+  window.e584DailyReportPDF=function(){
+    var input=document.getElementById('reportDate')||document.getElementById('date');
+    var d=(input&&input.value)||today584();
+    var html=reportHTML584(d);
+    var w=window.open('','_blank'); if(!w){alert('Popup blocked. Allow popups and try again.');return;}
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>UDS Daily Report '+esc584(d)+'</title><style>body{font-family:Arial,sans-serif;margin:0;color:#111}.toolbar{position:sticky;top:0;background:#0f172a;color:white;padding:10px;display:flex;justify-content:space-between;gap:10px}.toolbar button{border:0;border-radius:8px;padding:8px 14px;font-weight:900}.print{background:#2563eb;color:white}.close{background:#475569;color:white}.report{padding:18px}h1{font-size:22px;margin:0 0 6px}h2{border-bottom:2px solid #111;padding-bottom:4px;margin-top:18px}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.summary div{border:1px solid #aaa;border-radius:8px;padding:8px;text-align:center}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px}th,td{border:1px solid #777;padding:5px;text-align:left;vertical-align:top}th{background:#e5e7eb}.notes{height:80px;border:1px solid #777}@media print{@page{size:A4 portrait;margin:10mm}.toolbar{display:none}.report{padding:0}body{margin:0}.summary{grid-template-columns:repeat(6,1fr)}h1{font-size:20px}}</style></head><body><div class="toolbar"><b>Daily Report - No AI</b><div><button class="close" onclick="window.close()">Back / Close</button><button class="print" onclick="window.print()">Save PDF / Print</button></div></div>'+html+'</body></html>');
+    w.document.close(); w.focus();
+  };
+  function addEntryReportButton(){
+    var sec=document.getElementById('entry'); if(!sec || document.getElementById('e584EntryReportBtn')) return;
+    var btn=document.createElement('button'); btn.id='e584EntryReportBtn'; btn.type='button'; btn.className='e584-entry-report-btn'; btn.textContent='End of Day PDF Report (No AI)'; btn.onclick=window.e584DailyReportPDF;
+    var anchor=Array.from(sec.querySelectorAll('button')).reverse().find(function(b){return /save/i.test(b.textContent||'')}) || sec.querySelector('.form-card') || sec.firstElementChild;
+    if(anchor && anchor.parentElement) anchor.parentElement.insertBefore(btn, anchor.nextSibling); else sec.appendChild(btn);
+  }
+  var oldShow=window.showTab; if(typeof oldShow==='function' && !oldShow.__e584){window.showTab=function(id){oldShow.apply(window,arguments); if(String(id)==='entry'||String(id)==='report') setTimeout(addEntryReportButton,100);}; window.showTab.__e584=true;}
+  document.addEventListener('DOMContentLoaded',function(){setTimeout(addEntryReportButton,800)}); setTimeout(addEntryReportButton,1200);
+})();
+
+
+
+/* Enterprise 5.8.5 - Offline Field Mode */
+(function(){
+  var QUEUE_KEY = "e585_offline_queue";
+  var BACKUP_KEY = "e585_last_backup";
+
+  function safe(x){
+    return String(x || "").replace(/[&<>"']/g,function(m){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+    });
+  }
+  function readQueue(){
+    try{return JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]");}
+    catch(e){return [];}
+  }
+  function writeQueue(q){
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(q || []));
+    updateBanner();
+  }
+  function countQueue(type){
+    return readQueue().filter(function(x){return !type || x.type === type;}).length;
+  }
+  function addQueue(type, payload){
+    var q = readQueue();
+    q.push({
+      id: "OFF-" + Date.now() + "-" + Math.random().toString(16).slice(2),
+      type: type || "record",
+      status: "pending",
+      created_at: new Date().toISOString(),
+      payload: payload || {}
+    });
+    writeQueue(q);
+  }
+
+  function collectActiveFormData(){
+    var form = document.querySelector("#currentFormPrintable") || document.querySelector("#entry") || document.querySelector("#entries");
+    var data = {};
+    if(!form) return data;
+    form.querySelectorAll("input, textarea, select").forEach(function(el){
+      var key = el.id || el.name;
+      if(!key || el.type === "file") return;
+      if(el.type === "checkbox") data[key] = el.checked;
+      else if(el.type === "radio"){ if(el.checked) data[key] = el.value; }
+      else data[key] = el.value;
+    });
+    return data;
+  }
+
+  function bannerText(){
+    var q = readQueue();
+    if(!navigator.onLine){
+      return "OFFLINE FIELD MODE — saving on this device. Unsynced: " + q.length;
+    }
+    if(q.length){
+      return "ONLINE — " + q.length + " item(s) waiting to sync";
+    }
+    return "ONLINE — all local records clear";
+  }
+  function updateBanner(){
+    var b = document.getElementById("e585OfflineBanner");
+    if(!b){
+      b = document.createElement("div");
+      b.id = "e585OfflineBanner";
+      document.body.insertBefore(b, document.body.firstChild);
+    }
+    var q = readQueue();
+    b.className = !navigator.onLine ? "offline" : (q.length ? "pending" : "");
+    b.textContent = bannerText();
+  }
+
+  window.e585SaveOfflineNow = function(type){
+    addQueue(type || "manual", collectActiveFormData());
+    alert("Saved on this device. It will stay in the offline queue until synced/exported.");
+  };
+
+  window.e585ExportOfflineBackup = function(){
+    var backup = {
+      app_version: "5.8.5",
+      exported_at: new Date().toISOString(),
+      online: navigator.onLine,
+      queue: readQueue(),
+      savedForms: window.savedForms || [],
+      dailyEntries: (function(){try{return JSON.parse(localStorage.getItem("dailyEntries") || "[]");}catch(e){return [];}})()
+    };
+    localStorage.setItem(BACKUP_KEY, JSON.stringify(backup));
+    var blob = new Blob([JSON.stringify(backup, null, 2)], {type:"application/json"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "UDS_Offline_Backup_" + new Date().toISOString().slice(0,10) + ".json";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){URL.revokeObjectURL(url); a.remove();}, 1000);
+  };
+
+  window.e585ClearSyncedQueue = function(){
+    if(!confirm("Clear the offline queue? Only do this after confirming records are synced or backed up.")) return;
+    writeQueue([]);
+    renderOfflinePanel();
+  };
+
+  window.e585SyncOfflineQueue = async function(){
+    var q = readQueue();
+    if(!q.length){ alert("No offline records waiting."); return; }
+    if(!navigator.onLine){ alert("Still offline. Connect to internet first, then tap Sync."); return; }
+
+    var synced = 0;
+    var remaining = [];
+    for(var i=0;i<q.length;i++){
+      var item = q[i];
+      try{
+        // Best-effort sync hook: if the app has its own sync function, call it.
+        if(typeof window.syncNow === "function"){
+          await window.syncNow();
+        } else if(typeof window.syncData === "function"){
+          await window.syncData();
+        } else if(typeof window.syncAll === "function"){
+          await window.syncAll();
+        }
+        item.status = "synced";
+        synced++;
+      }catch(e){
+        item.error = String(e.message || e);
+        remaining.push(item);
+      }
+    }
+    writeQueue(remaining);
+    renderOfflinePanel();
+    alert("Sync attempt complete. Synced/processed: " + synced + ". Still waiting: " + remaining.length + ".");
+  };
+
+  function offlinePanelHTML(){
+    var total = countQueue();
+    return '<div class="e585-panel" id="e585OfflinePanel">' +
+      '<h3>Offline Field Mode</h3>' +
+      '<p>This device can save entries and forms underground with no internet. Sync or export when you are back online.</p>' +
+      '<div class="e585-sync-grid">' +
+        '<div class="e585-sync-card"><b>'+countQueue("entry")+'</b>Entries waiting</div>' +
+        '<div class="e585-sync-card"><b>'+countQueue("form")+'</b>Forms waiting</div>' +
+        '<div class="e585-sync-card"><b>'+total+'</b>Total unsynced</div>' +
+      '</div>' +
+      '<div class="e585-actions">' +
+        '<button type="button" onclick="e585SyncOfflineQueue()">Sync Offline Queue</button>' +
+        '<button type="button" onclick="e585ExportOfflineBackup()">Export Backup</button>' +
+        '<button type="button" onclick="e585ClearSyncedQueue()">Clear Queue</button>' +
+      '</div>' +
+      '<p><span class="e585-offline-pill">'+(navigator.onLine ? "Online" : "Offline")+'</span></p>' +
+    '</div>';
+  }
+
+  function renderOfflinePanel(){
+    var targets = [
+      document.getElementById("home"),
+      document.getElementById("entry"),
+      document.getElementById("entries"),
+      document.getElementById("documents"),
+      document.getElementById("more"),
+      document.getElementById("admin")
+    ];
+    targets.forEach(function(sec){
+      if(!sec) return;
+      var old = sec.querySelector("#e585OfflinePanel");
+      if(old) old.remove();
+      if(sec.style.display === "none") return;
+      var wrap = document.createElement("div");
+      wrap.innerHTML = offlinePanelHTML();
+      sec.appendChild(wrap.firstChild);
+    });
+    updateBanner();
+  }
+
+  function wrapSaveFunction(name, type){
+    var fn = window[name];
+    if(typeof fn !== "function" || fn.__e585Wrapped) return;
+    var wrapped = async function(){
+      var data = collectActiveFormData();
+      if(!navigator.onLine){
+        addQueue(type, data);
+        alert("Offline: saved on this device for later sync.");
+        return {offline:true};
+      }
+      try{
+        var result = fn.apply(window, arguments);
+        if(result && typeof result.then === "function") await result;
+        return result;
+      }catch(e){
+        addQueue(type, data);
+        alert("Save failed online, so it was kept in the offline queue.");
+        throw e;
+      }
+    };
+    wrapped.__e585Wrapped = true;
+    window[name] = wrapped;
+  }
+
+  function wireSaveButtons(){
+    ["saveEntry","saveDailyEntry","saveDailyLog","saveLogEntry","submitEntry","submitDailyEntry","addEntry","addDailyEntry","saveProductionEntry"].forEach(function(n){wrapSaveFunction(n,"entry");});
+    ["saveFillableForm","saveCurrentForm","saveForm","submitForm"].forEach(function(n){wrapSaveFunction(n,"form");});
+
+    document.querySelectorAll("button").forEach(function(btn){
+      if(btn.dataset.e585Wired) return;
+      var text = (btn.textContent || "").toLowerCase();
+      var onclick = (btn.getAttribute("onclick") || "").toLowerCase();
+      if(text.indexOf("save") >= 0 || onclick.indexOf("save") >= 0 || text.indexOf("submit") >= 0){
+        btn.dataset.e585Wired = "1";
+        btn.addEventListener("click", function(){
+          if(!navigator.onLine){
+            var type = document.querySelector("#currentFormPrintable") ? "form" : "entry";
+            setTimeout(function(){addQueue(type, collectActiveFormData());}, 250);
+          }
+        }, true);
+      }
+    });
+  }
+
+  var oldShowTab = window.showTab;
+  if(typeof oldShowTab === "function" && !oldShowTab.__e585Wrapped){
+    window.showTab = function(){
+      oldShowTab.apply(window, arguments);
+      setTimeout(function(){wireSaveButtons(); renderOfflinePanel();}, 300);
+    };
+    window.showTab.__e585Wrapped = true;
+  }
+
+  window.addEventListener("online", function(){updateBanner(); renderOfflinePanel();});
+  window.addEventListener("offline", function(){updateBanner(); renderOfflinePanel();});
+  window.addEventListener("beforeunload", function(e){
+    if(readQueue().length){
+      e.preventDefault();
+      e.returnValue = "You have unsynced offline records on this device.";
+      return e.returnValue;
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", function(){
+    setTimeout(function(){updateBanner(); wireSaveButtons(); renderOfflinePanel();}, 900);
+  });
+  setTimeout(function(){updateBanner(); wireSaveButtons(); renderOfflinePanel();}, 1500);
 })();
