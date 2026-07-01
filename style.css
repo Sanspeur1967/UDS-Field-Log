@@ -1111,3 +1111,14 @@ button.secondary{background:#475569}button.success{background:#16a34a}button.dan
 @media(min-width:760px){
   .e585-sync-grid{grid-template-columns:repeat(3,1fr)}
 }
+
+
+/* Enterprise 5.8.6 - PJO Signature Save + Print */
+.pjo-signature-card{text-align:center}
+.pjo-signature-card input{text-align:center;font-size:18px;font-weight:800}
+.pjo-signature-card .signature-preview,.pjo-signature-card .signature-box,.pjo-signature-card canvas{margin-left:auto;margin-right:auto}
+.pjo-print-sig-name{text-align:center;font-size:13px;font-weight:900;line-height:1.25}
+.pjo-print-sig-img{display:block;margin:0 auto;max-width:190px;max-height:52px;object-fit:contain}
+.pjo-print-sig-empty{text-align:center;color:#666;font-size:10px;min-height:40px}
+.pjo-print-sig-cell{height:82px;text-align:center!important;vertical-align:middle!important;padding:6px!important}
+.pjo-print-answer{text-align:center!important;font-size:12px!important;font-weight:800!important;line-height:1.35!important}

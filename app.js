@@ -181,7 +181,7 @@ let savedForms=JSON.parse(localStorage.getItem("uds_enterprise_forms")||"[]");
 let actions=JSON.parse(localStorage.getItem("uds_pro_actions")||localStorage.getItem("uds_v2_actions")||"[]");
 let pendingPhotos=[], modalPhotos=[], modalIndex=0, markupIndex=null, markupTool="circle", markupImage=null;
 
-window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();applyLanguage();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=5.8.5")};
+window.onload=async()=>{document.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));document.querySelectorAll("button[data-go]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.go)));const n=new Date(),t=n.toISOString().split("T")[0];date.value=t;reportDate.value=t;aiDate.value=t;time.value=n.toTimeString().slice(0,5);loadPreviewRole();await initAuth();applyLanguage();renderAll();checkSupabase();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js?v=5.8.6")};
 function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll("button[data-tab]").forEach(b=>b.classList.remove("active"));document.getElementById(id).classList.add("active");let n=document.querySelector(`button[data-tab='${id}']`);if(n)n.classList.add("active");if(id==="entriesRegister")renderEntriesRegister();if(id==="forms"){renderSelectedForm();renderSavedForms();}if(id==="gallery")renderGallery();if(id==="map")renderMineMap();if(id==="admin"){updateAdminVisibility();loadUserRoles();}window.scrollTo(0,0)}
 function supabaseReady(){return SUPABASE_URL.includes("supabase.co")&&SUPABASE_ANON_KEY.length>20}
 function headers(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json",...extra}}
@@ -358,7 +358,7 @@ async function saveEntry(){if(!canWrite()){alert("Viewer role is read-only.");re
 function saveAction(){if(!canWrite()){alert("Viewer role is read-only.");return;}let a={local_id:"a_"+Date.now(),cloud_id:null,heading:val("actionHeading"),actionText:val("actionText"),owner:val("owner"),priority:val("priority"),dueDate:val("dueDate"),status:val("status"),synced:false,createdAt:new Date().toISOString()};if(!a.actionText){alert("Enter the action required.");return}actions.unshift(a);saveLocal();clearAction();renderAll();if(supabaseReady()&&navigator.onLine)syncAll();else alert("Action saved offline.")}
 
 async function syncAll(){if(!supabaseReady()){alert("Supabase key is not configured yet.");return}if(!navigator.onLine){alert("No internet.");return}syncStatus.textContent="Syncing...";try{for(const e of entries.filter(x=>!x.synced))await syncEntry(e);for(const a of actions.filter(x=>!x.synced))await syncAction(a);saveLocal();renderAll();syncStatus.textContent="Sync complete";alert("Sync complete.")}catch(err){syncStatus.textContent="Sync failed";alert("Sync failed: "+err.message)}}
-async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 5.8.5",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
+async function syncEntry(e){let body={entry_date:e.date,entry_time:e.time,shift:e.shift,heading:e.heading,level_area:e.levelArea,activity:e.activity,round_chainage:e.roundChainage,metres_advanced:e.metresAdvanced,bolts_installed:e.boltsInstalled,mesh_installed:e.meshInstalled,shotcrete_m3:e.shotcreteM3,shotcrete_thickness:e.shotcreteThickness,equipment:e.equipment,ground_condition:e.groundCondition,job:e.job,delays:e.delays,next_shift:e.nextShift,notes:extraNotes(e),ptha:e.checks.ptha,lif:e.checks.lif,scaled:e.checks.scaled,ground_support:e.checks.groundSupport,bolt_pattern:e.checks.boltPattern,shotcrete_quality:e.checks.shotcreteQuality,ventilation:e.checks.ventilation,services_clear:e.checks.servicesClear,barricades:e.checks.barricades,reentry:e.checks.reentry,synced_by:"UDS Development Pro Enterprise 5.8.6",created_by:currentUser?.id||null,created_by_email:currentUser?.email||""};let r=await fetch(`${SUPABASE_URL}/rest/v1/development_entries`,{method:"POST",headers:await getAuthHeaders({"Prefer":"return=representation"}),body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());let s=(await r.json())[0];e.cloud_id=s.id;for(let i=0;i<(e.photos||[]).length;i++){let u=await uploadPhoto(e.photos[i],s.id,i);await insertPhoto(s.id,u)}e.synced=true}
 function extraNotes(e){return `Crew: ${e.crew||""}; Supervisor: ${e.supervisor||""}; Captain: ${e.foreman||""}; Personnel: ${e.personnel||0}; Cable bolts: ${e.cableBolts||0}; Delay type: ${e.delayType||""}; Delay hours: ${e.delayHours||0}; Safety observation: ${e.safetyObservation||""}; Good catch: ${e.goodCatch||""}; Notes: ${e.notes||""}`}
 async function uploadPhoto(d,id,i){let blob=dataUrlToBlob(d),path=`${id}/${Date.now()}_${i}.jpg`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${path}`,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":blob.type,"x-upsert":"true"},body:blob});if(!r.ok)throw new Error(await r.text());return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${path}`}
 async function insertPhoto(id,u){let r=await fetch(`${SUPABASE_URL}/rest/v1/development_photos`,{method:"POST",headers:await getAuthHeaders(),body:JSON.stringify({development_entry_id:id,photo_url:u,caption:""})});if(!r.ok)throw new Error(await r.text())}
@@ -3400,4 +3400,115 @@ setTimeout(inject,1200);
     setTimeout(function(){updateBanner(); wireSaveButtons(); renderOfflinePanel();}, 900);
   });
   setTimeout(function(){updateBanner(); wireSaveButtons(); renderOfflinePanel();}, 1500);
+})();
+
+
+
+/* Enterprise 5.8.6 - PJO Signature Save + Print Fix */
+(function(){
+  var SIGS=[
+    ["Worker #1","pjo_name_emp1","pjo_sig_emp1"],
+    ["Worker #2","pjo_name_emp2","pjo_sig_emp2"],
+    ["Observer / Crew Trainer","pjo_name_observer","pjo_sig_observer"],
+    ["Supervisor","pjo_name_supervisor","pjo_sig_supervisor"],
+    ["Superintendent / Area Manager","pjo_name_manager","pjo_sig_manager"],
+    ["Safety Coordinator","pjo_name_safety","pjo_sig_safety"]
+  ];
+  function safe(x){return String(x||"").replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function isPJO(){
+    var f=document.querySelector("#currentFormPrintable"); if(!f)return false;
+    var t=(f.textContent||"").toLowerCase();
+    return t.indexOf("planned job observation")>=0 || !!f.querySelector('[id^="pjo_"]');
+  }
+  function sigData(id){
+    var hid=document.getElementById(id);
+    if(hid && hid.value && hid.value.indexOf("data:image")===0) return hid.value;
+    var img=document.querySelector("#"+id+"_preview img,#"+id+" img,[data-sig-id='"+id+"'] img");
+    if(img && img.src && img.src.indexOf("data:image")===0) return img.src;
+    var canvas=document.querySelector("#"+id+" canvas,#"+id+"_pad,canvas[id*='"+id+"']");
+    if(canvas && canvas.toDataURL){try{var d=canvas.toDataURL("image/png"); if(d && d.length>200)return d;}catch(e){}}
+    var v=localStorage.getItem(id)||localStorage.getItem(id+"_data")||"";
+    return v.indexOf("data:image")===0?v:"";
+  }
+  function setSig(id,data){
+    if(!data)return;
+    var el=document.getElementById(id);
+    if(!el || el.tagName!=="INPUT"){
+      el=document.getElementById(id+"_hidden");
+    }
+    if(!el){
+      el=document.createElement("input");
+      el.type="hidden"; el.id=id; el.name=id;
+      (document.querySelector("#currentFormPrintable")||document.body).appendChild(el);
+    }
+    el.value=data;
+    try{localStorage.setItem(id,data);}catch(e){}
+  }
+  function capture(){
+    if(!isPJO())return;
+    SIGS.forEach(function(s){
+      var n=document.getElementById(s[1]);
+      if(n){try{localStorage.setItem(s[1],n.value||"");}catch(e){}}
+      var d=sigData(s[2]); if(d)setSig(s[2],d);
+    });
+  }
+  function val(data,key){
+    return (data&&data[key]) || (document.getElementById(key)&&document.getElementById(key).value) || localStorage.getItem(key) || "";
+  }
+  function sigVal(data,key){return (data&&data[key]) || sigData(key) || "";}
+  function cell(data,s){
+    var name=val(data,s[1]), sig=sigVal(data,s[2]);
+    return '<td class="pjo-print-sig-cell"><div class="pjo-print-sig-name">'+safe(s[0])+'</div><div class="pjo-print-sig-name">'+safe(name)+'</div>'+(sig?'<img class="pjo-print-sig-img" src="'+sig+'">':'<div class="pjo-print-sig-empty">Signature not captured</div>')+'</td>';
+  }
+  function sigTable(data){
+    return '<tr class="official-grey"><td colspan="4" style="text-align:center;font-size:13px">Signatures / Гарын үсэг</td></tr>'+
+      '<tr>'+cell(data,SIGS[0])+cell(data,SIGS[1])+'</tr>'+
+      '<tr>'+cell(data,SIGS[2])+cell(data,SIGS[3])+'</tr>'+
+      '<tr>'+cell(data,SIGS[4])+cell(data,SIGS[5])+'</tr>';
+  }
+  var oldCollect=window.collectCurrentForm;
+  if(typeof oldCollect==="function" && !oldCollect.__e586){
+    window.collectCurrentForm=function(){
+      capture();
+      var data=oldCollect.apply(window,arguments)||{};
+      if(isPJO())SIGS.forEach(function(s){data[s[1]]=val(data,s[1]);data[s[2]]=sigVal(data,s[2]);});
+      return data;
+    };
+    window.collectCurrentForm.__e586=true;
+  }
+  var oldSave=window.saveFillableForm;
+  if(typeof oldSave==="function" && !oldSave.__e586){
+    window.saveFillableForm=function(){capture();return oldSave.apply(window,arguments);};
+    window.saveFillableForm.__e586=true;
+  }
+  var oldPrint=window.printCurrentForm;
+  if(typeof oldPrint==="function" && !oldPrint.__e586){
+    window.printCurrentForm=function(){capture();return oldPrint.apply(window,arguments);};
+    window.printCurrentForm.__e586=true;
+  }
+  var oldBuild=window.buildPJOPrintHTML;
+  if(typeof oldBuild==="function" && !oldBuild.__e586){
+    window.buildPJOPrintHTML=function(f){
+      capture();
+      f=f||{}; f.data=f.data||{};
+      SIGS.forEach(function(s){f.data[s[1]]=val(f.data,s[1]);f.data[s[2]]=sigVal(f.data,s[2]);});
+      var html=oldBuild.apply(window,arguments)||"";
+      if(html.indexOf("pjo-print-sig-cell")<0){
+        var i=html.lastIndexOf("</table>");
+        html = i>=0 ? html.slice(0,i)+sigTable(f.data)+html.slice(i) : html+'<table class="official-table">'+sigTable(f.data)+'</table>';
+      }
+      return html;
+    };
+    window.buildPJOPrintHTML.__e586=true;
+  }
+  document.addEventListener("click",function(e){
+    if(!isPJO())return;
+    var b=e.target.closest("button"); if(!b)return;
+    var t=(b.textContent||"").toLowerCase();
+    if(t.indexOf("sign")>=0||t.indexOf("save")>=0||t.indexOf("print")>=0){
+      setTimeout(capture,250); setTimeout(capture,900); setTimeout(capture,1600);
+    }
+  },true);
+  document.addEventListener("input",function(e){if(isPJO() && (e.target.id||"").indexOf("pjo_")===0)setTimeout(capture,100);},true);
+  setInterval(capture,1500);
 })();
